@@ -3,6 +3,7 @@
 
 #include "udp_socket.h"
 #include <array>
+#include <string>
 
 class TFTPClient
 {
