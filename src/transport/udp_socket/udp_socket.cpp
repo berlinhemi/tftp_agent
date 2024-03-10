@@ -12,19 +12,20 @@
 UdpSocket::UdpSocket()
     : m_port(0)
     , m_socket(-1)
+    , m_address{}
 {
-    ::memset(m_address, '\0', 15);
+   // memset(m_address, 0, 15);
 }
 
 UdpSocket::~UdpSocket()
 {
-    abort();
+    Abort();
 }
 
-bool UdpSocket::initSocket()
+bool UdpSocket::InitSocket()
 {
     // Creating socket file descriptor
-    m_socket = ::socket(AF_INET, SOCK_DGRAM, 0);
+    m_socket = socket(AF_INET, SOCK_DGRAM, 0);
     if (m_socket == -1) {
         return false; // socket creation failed
     }
@@ -34,7 +35,7 @@ bool UdpSocket::initSocket()
     timeout.tv_sec = 2;
     timeout.tv_usec = 0;
 
-    if (::setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+    if (setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
         return false;
     }
     /*if (::setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
@@ -44,30 +45,30 @@ bool UdpSocket::initSocket()
     return true;
 }
 
-bool UdpSocket::bind(const char *localAddress, uint16_t localPort)
+bool UdpSocket::BindSocket(const char *localAddress, uint16_t localPort)
 {
     if (localPort == 0) {
         return false;
     }
 
     if (localAddress != nullptr) {
-        ::strcpy(m_address, localAddress);
+        strcpy(m_address, localAddress);
     }
     m_port = localPort;
 
-    if (!initSocket()) {
+    if (!InitSocket()) {
         return false;
     }
 
     int broadcast = 1;
     int result =
-            ::setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
+            setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
     if (result != 0) {
         return false;
     }
 
     struct sockaddr_in localAddr;
-    ::memset(&localAddr, '\0', sizeof(localAddr));
+    memset(&localAddr, '\0', sizeof(localAddr));
 
     // Filling server information
     localAddr.sin_family = AF_INET; // IPv4
@@ -76,30 +77,30 @@ bool UdpSocket::bind(const char *localAddress, uint16_t localPort)
     localAddr.sin_port = htons(m_port);
 
     // Bind the socket with the server address
-    result = ::bind(m_socket, (const struct sockaddr *)&localAddr, sizeof(localAddr));
+    result = bind(m_socket, (const struct sockaddr *)&localAddr, sizeof(localAddr));
     if (result != 0) { // bind failed
-        ::close(m_socket);
+        close(m_socket);
         return false;
     }
 
     return true;
 }
 
-bool UdpSocket::bind( uint16_t localPort )
+bool UdpSocket::BindSocket( uint16_t localPort )
 {
-    return bind(nullptr, localPort);
+    return BindSocket(nullptr, localPort);
 }
 
-void UdpSocket::abort()
+void UdpSocket::Abort()
 {
     if (m_socket != -1) {
-        ::shutdown(m_socket, 2);
-        ::close(m_socket);
+        shutdown(m_socket, 2);
+        close(m_socket);
         m_socket = -1;
     }
 }
 
-int64_t UdpSocket::readDatagram(char *data, int64_t maxlen, char *host, uint16_t *port)
+int64_t UdpSocket::ReadDatagram(char *data, int64_t maxlen, char *host, uint16_t *port)
 {
     if ((data == nullptr) || (maxlen == 0) || (m_socket < 0)) {
         return 0;
@@ -107,16 +108,16 @@ int64_t UdpSocket::readDatagram(char *data, int64_t maxlen, char *host, uint16_t
 
     struct sockaddr_in remoteAddr;
     socklen_t remoteAddrLen = sizeof(struct sockaddr_in);
-    ::memset(&remoteAddr, '\0', sizeof(remoteAddr));
+    memset(&remoteAddr, '\0', sizeof(remoteAddr));
 
     const int64_t size =
-            ::recvfrom(m_socket, data, maxlen,
+            recvfrom(m_socket, data, maxlen,
                        MSG_WAITFORONE, // blocking operation! Use MSG_DONTWAIT for non blocking
                        (struct sockaddr *)&remoteAddr, &remoteAddrLen);
     if (size > 0) {
         if (host != nullptr) {
             //inet_pton(AF_INET, inet_ntoa( senderAddr.sin_addr ), host);
-            ::strcpy(host, inet_ntoa(remoteAddr.sin_addr));
+            strcpy(host, inet_ntoa(remoteAddr.sin_addr));
         }
         if (port != nullptr) {
             *port = ntohs(remoteAddr.sin_port);
@@ -126,7 +127,7 @@ int64_t UdpSocket::readDatagram(char *data, int64_t maxlen, char *host, uint16_t
     return size;
 }
 
-int64_t UdpSocket::writeDatagram(const char *data, int64_t len, const char *host, uint16_t port)
+int64_t UdpSocket::WriteDatagram(const char *data, int64_t len, const char *host, uint16_t port)
 {
     if ((data == nullptr) || (len == 0) || (m_socket < 0)) {
         return 0;
@@ -134,22 +135,22 @@ int64_t UdpSocket::writeDatagram(const char *data, int64_t len, const char *host
 
     struct sockaddr_in remoteAddr;
     remoteAddr.sin_family = AF_INET;
-    remoteAddr.sin_addr.s_addr = host != nullptr ? ::inet_addr(host) : INADDR_ANY;
+    remoteAddr.sin_addr.s_addr = host != nullptr ? inet_addr(host) : INADDR_ANY;
     remoteAddr.sin_port = htons(port);
-    ::memset(remoteAddr.sin_zero, '\0', sizeof(remoteAddr.sin_zero));
+    memset(remoteAddr.sin_zero, '\0', sizeof(remoteAddr.sin_zero));
 
     const int64_t size =
-            ::sendto(m_socket, data, len, MSG_DONTWAIT, (struct sockaddr*)&remoteAddr, sizeof(remoteAddr));
+            sendto(m_socket, data, len, MSG_DONTWAIT, (struct sockaddr*)&remoteAddr, sizeof(remoteAddr));
 
     return size;
 }
 
-const char* UdpSocket::localAddress() const
+const char* UdpSocket::LocalAddress() const
 {
     return m_address;
 }
 
-uint16_t UdpSocket::localPort() const
+uint16_t UdpSocket::LocalPort() const
 {
     return m_port;
 }

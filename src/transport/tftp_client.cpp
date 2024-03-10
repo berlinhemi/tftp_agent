@@ -9,7 +9,7 @@ TFTPClient::TFTPClient(const std::string &serverAddress, uint16_t port)
     , m_remotePort(0)
     , m_receivedBlock(0)
 {
-    m_status = m_socket.initSocket() ? Status::Success : Status::InvalidSocket;
+    m_status = m_socket.InitSocket() ? Status::Success : Status::InvalidSocket;
 }
 
 TFTPClient::Status TFTPClient::get(const std::string &fileName)
@@ -121,7 +121,7 @@ TFTPClient::Result TFTPClient::sendRequest(const std::string &fileName, Operatio
 
     const auto packetSize = std::distance(&m_buffer[0], end);
     const auto writtenBytes =
-            m_socket.writeDatagram(&m_buffer[0], packetSize, m_remoteAddress.c_str(), m_port);
+            m_socket.WriteDatagram(&m_buffer[0], packetSize, m_remoteAddress.c_str(), m_port);
     if (writtenBytes != packetSize) {
         return std::make_pair(Status::WriteError, writtenBytes);
     }
@@ -137,7 +137,7 @@ TFTPClient::Result TFTPClient::sendAck(const char *host, uint16_t port)
     m_buffer[1] = static_cast<char>(OperationCode::ACK);
 
     const auto bytesWritten =
-            m_socket.writeDatagram(&m_buffer[0], packetSize, host, port);
+            m_socket.WriteDatagram(&m_buffer[0], packetSize, host, port);
     const bool isSuccess = bytesWritten == packetSize;
 
     return std::make_pair(isSuccess ? Status::Success : Status::WriteError,
@@ -147,7 +147,7 @@ TFTPClient::Result TFTPClient::sendAck(const char *host, uint16_t port)
 TFTPClient::Result TFTPClient::read()
 {
     const auto receivedBytes =
-            m_socket.readDatagram(&m_buffer[0], m_buffer.size(), &m_remoteAddress[0], &m_remotePort);
+            m_socket.ReadDatagram(&m_buffer[0], m_buffer.size(), &m_remoteAddress[0], &m_remotePort);
     if (receivedBytes == -1) {
         std::puts("\nError! No data received.");
         return std::make_pair(Status::ReadError, receivedBytes);
@@ -239,7 +239,7 @@ TFTPClient::Result TFTPClient::putFile(std::fstream &file)
         // DATA
         const auto packetSize = m_headerSize + file.gcount();
         const auto writtenBytes =
-                m_socket.writeDatagram(&m_buffer[0], packetSize, m_remoteAddress.c_str(), m_remotePort);
+                m_socket.WriteDatagram(&m_buffer[0], packetSize, m_remoteAddress.c_str(), m_remotePort);
         if (writtenBytes != packetSize) {
             return std::make_pair(Status::WriteError, totalWrittenBytes + writtenBytes);
         }
