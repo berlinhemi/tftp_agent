@@ -34,6 +34,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    
+
     printf("\nStart TFTP Client %s:%u\n", host.c_str(), port);
 
     TFTPClient client(host, port);
@@ -46,6 +48,8 @@ int main(int argc, char **argv)
         printf("%s\n\n", client.ErrorDescription(status).c_str());
         return 1;
     }
+
+    
 
     printf("\nElapsed time: %ld [ms]\n\n",
            std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());

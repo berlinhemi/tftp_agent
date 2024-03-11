@@ -24,21 +24,21 @@ public:
         ReadFileError
     };
 
-    TFTPClient(const std::string &serverAddress, uint16_t port);
+    TFTPClient(const std::string &server_addr, uint16_t port);
 
-    Status Get(const std::string &fileName);
-    Status Put(const std::string &fileName);
+    Status Get(const std::string &file_name);
+    Status Put(const std::string &file_name);
 
     std::string ErrorDescription(Status code);
 
 private:
-    static constexpr uint8_t m_headerSize = 4;
-    static constexpr uint16_t m_dataSize = 512;
+    static const uint8_t kHeaderSize = 4;
+    static const uint16_t kDataSize = 512;
 
     using Result = std::pair<Status, int32_t>;
-    using Buffer = std::array<char, m_headerSize + m_dataSize>;
+    using Buffer = std::array<char, kHeaderSize + kDataSize>;
 
-    Result SendRequest(const std::string &fileName, OpCode code);
+    Result SendRequest(const std::string &file_name, OpCode code);
     Result SendAck(const char *host, uint16_t port);
     Result Read();
     Result GetFile(std::fstream &file);

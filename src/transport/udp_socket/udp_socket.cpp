@@ -45,16 +45,16 @@ bool UdpSocket::Init()
     return true;
 }
 
-bool UdpSocket::Bind(const char *localAddress, uint16_t localPort)
+bool UdpSocket::Bind(const char *local_addr, uint16_t local_port)
 {
-    if (localPort == 0) {
+    if (local_port == 0) {
         return false;
     }
 
-    if (localAddress != nullptr) {
-        strcpy(address_, localAddress);
+    if (local_addr != nullptr) {
+        strcpy(address_, local_addr);
     }
-    port_ = localPort;
+    port_ = local_port;
 
     if (!Init()) {
         return false;
@@ -86,9 +86,9 @@ bool UdpSocket::Bind(const char *localAddress, uint16_t localPort)
     return true;
 }
 
-bool UdpSocket::Bind( uint16_t localPort )
+bool UdpSocket::Bind( uint16_t local_port )
 {
-    return Bind(nullptr, localPort);
+    return Bind(nullptr, local_port);
 }
 
 void UdpSocket::Abort()
