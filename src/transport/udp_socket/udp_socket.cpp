@@ -10,11 +10,11 @@
 #include <cstring> // memset
 
 UdpSocket::UdpSocket()
-    : m_port(0)
-    , m_socket(-1)
-    , m_address{}
+    : port_(0)
+    , socket_(-1)
+    , address_{}
 {
-   // memset(m_address, 0, 15);
+   // memset(address_, 0, 15);
 }
 
 UdpSocket::~UdpSocket()
@@ -22,11 +22,11 @@ UdpSocket::~UdpSocket()
     Abort();
 }
 
-bool UdpSocket::InitSocket()
+bool UdpSocket::Init()
 {
     // Creating socket file descriptor
-    m_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    if (m_socket == -1) {
+    socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+    if (socket_ == -1) {
         return false; // socket creation failed
     }
 
@@ -35,34 +35,34 @@ bool UdpSocket::InitSocket()
     timeout.tv_sec = 2;
     timeout.tv_usec = 0;
 
-    if (setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+    if (setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
         return false;
     }
-    /*if (::setsockopt(m_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+    /*if (::setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
         return false;
     }*/
 
     return true;
 }
 
-bool UdpSocket::BindSocket(const char *localAddress, uint16_t localPort)
+bool UdpSocket::Bind(const char *localAddress, uint16_t localPort)
 {
     if (localPort == 0) {
         return false;
     }
 
     if (localAddress != nullptr) {
-        strcpy(m_address, localAddress);
+        strcpy(address_, localAddress);
     }
-    m_port = localPort;
+    port_ = localPort;
 
-    if (!InitSocket()) {
+    if (!Init()) {
         return false;
     }
 
     int broadcast = 1;
     int result =
-            setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
+            setsockopt(socket_, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
     if (result != 0) {
         return false;
     }
@@ -74,35 +74,35 @@ bool UdpSocket::BindSocket(const char *localAddress, uint16_t localPort)
     localAddr.sin_family = AF_INET; // IPv4
     //    local_addr.sin_addr.s_addr = local_address != nullptr ? ::inet_addr( local_address ) : INADDR_ANY;
     localAddr.sin_addr.s_addr = INADDR_ANY;
-    localAddr.sin_port = htons(m_port);
+    localAddr.sin_port = htons(port_);
 
     // Bind the socket with the server address
-    result = bind(m_socket, (const struct sockaddr *)&localAddr, sizeof(localAddr));
+    result = bind(socket_, (const struct sockaddr *)&localAddr, sizeof(localAddr));
     if (result != 0) { // bind failed
-        close(m_socket);
+        close(socket_);
         return false;
     }
 
     return true;
 }
 
-bool UdpSocket::BindSocket( uint16_t localPort )
+bool UdpSocket::Bind( uint16_t localPort )
 {
-    return BindSocket(nullptr, localPort);
+    return Bind(nullptr, localPort);
 }
 
 void UdpSocket::Abort()
 {
-    if (m_socket != -1) {
-        shutdown(m_socket, 2);
-        close(m_socket);
-        m_socket = -1;
+    if (socket_ != -1) {
+        shutdown(socket_, 2);
+        close(socket_);
+        socket_ = -1;
     }
 }
 
 int64_t UdpSocket::ReadDatagram(char *data, int64_t maxlen, char *host, uint16_t *port)
 {
-    if ((data == nullptr) || (maxlen == 0) || (m_socket < 0)) {
+    if ((data == nullptr) || (maxlen == 0) || (socket_ < 0)) {
         return 0;
     }
 
@@ -111,7 +111,7 @@ int64_t UdpSocket::ReadDatagram(char *data, int64_t maxlen, char *host, uint16_t
     memset(&remoteAddr, '\0', sizeof(remoteAddr));
 
     const int64_t size =
-            recvfrom(m_socket, data, maxlen,
+            recvfrom(socket_, data, maxlen,
                        MSG_WAITFORONE, // blocking operation! Use MSG_DONTWAIT for non blocking
                        (struct sockaddr *)&remoteAddr, &remoteAddrLen);
     if (size > 0) {
@@ -129,7 +129,7 @@ int64_t UdpSocket::ReadDatagram(char *data, int64_t maxlen, char *host, uint16_t
 
 int64_t UdpSocket::WriteDatagram(const char *data, int64_t len, const char *host, uint16_t port)
 {
-    if ((data == nullptr) || (len == 0) || (m_socket < 0)) {
+    if ((data == nullptr) || (len == 0) || (socket_ < 0)) {
         return 0;
     }
 
@@ -140,17 +140,17 @@ int64_t UdpSocket::WriteDatagram(const char *data, int64_t len, const char *host
     memset(remoteAddr.sin_zero, '\0', sizeof(remoteAddr.sin_zero));
 
     const int64_t size =
-            sendto(m_socket, data, len, MSG_DONTWAIT, (struct sockaddr*)&remoteAddr, sizeof(remoteAddr));
+            sendto(socket_, data, len, MSG_DONTWAIT, (struct sockaddr*)&remoteAddr, sizeof(remoteAddr));
 
     return size;
 }
 
 const char* UdpSocket::LocalAddress() const
 {
-    return m_address;
+    return address_;
 }
 
 uint16_t UdpSocket::LocalPort() const
 {
-    return m_port;
+    return port_;
 }

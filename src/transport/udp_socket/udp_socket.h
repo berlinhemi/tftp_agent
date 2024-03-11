@@ -30,27 +30,23 @@ public:
     UdpSocket();
     ~UdpSocket();
 
-    bool InitSocket();
-    bool BindSocket(const char *localAddress, uint16_t localPort);
-    bool BindSocket(uint16_t localPort);
+    bool Init();
+    bool Bind(const char *local_address, uint16_t local_port);
+    bool Bind(uint16_t local_port);
     void Abort();
 
-    int64_t ReadDatagram(char *data, int64_t maxlen, char *host = nullptr, uint16_t *port = nullptr);
+    int64_t ReadDatagram(char *data, int64_t max_len, char *host = nullptr, uint16_t *port = nullptr);
     int64_t WriteDatagram(const char *data, int64_t len, const char *host, uint16_t port);
 
     const char *LocalAddress() const;
     uint16_t LocalPort() const;
 
 private:
-    //max: 4 octets + 3 dots
-    char m_address[15];
-    uint16_t m_port;
-    int m_socket;
-// #ifdef WIN32
-//     size_t m_socket;
-// #else
-    
-//#endif
+    //max: 4 octets (4*3) + 3 dots 
+    char address_[15];
+    uint16_t port_;
+    int socket_;
+
 };
 
 #endif // UDP_SOCKET_H

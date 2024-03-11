@@ -7,12 +7,12 @@
 
 class TFTPClient
 {
-    enum OperationCode {
+    enum class OpCode {
         RRQ = 1, WRQ, DATA, ACK, ERR, OACK
     };
 
 public:
-    enum Status {
+    enum class Status {
         Success = 0,
         InvalidSocket,
         WriteError,
@@ -26,10 +26,10 @@ public:
 
     TFTPClient(const std::string &serverAddress, uint16_t port);
 
-    Status get(const std::string &fileName);
-    Status put(const std::string &fileName);
+    Status Get(const std::string &fileName);
+    Status Put(const std::string &fileName);
 
-    std::string errorDescription(Status code);
+    std::string ErrorDescription(Status code);
 
 private:
     static constexpr uint8_t m_headerSize = 4;
@@ -38,19 +38,19 @@ private:
     using Result = std::pair<Status, int32_t>;
     using Buffer = std::array<char, m_headerSize + m_dataSize>;
 
-    Result sendRequest(const std::string &fileName, OperationCode code);
-    Result sendAck(const char *host, uint16_t port);
-    Result read();
-    Result getFile(std::fstream &file);
-    Result putFile(std::fstream &file);
+    Result SendRequest(const std::string &fileName, OpCode code);
+    Result SendAck(const char *host, uint16_t port);
+    Result Read();
+    Result GetFile(std::fstream &file);
+    Result PutFile(std::fstream &file);
 
-    UdpSocket m_socket;
-    std::string m_remoteAddress;
-    uint16_t m_port;
-    uint16_t m_remotePort;
-    Buffer m_buffer;
-    uint16_t m_receivedBlock;
-    Status m_status;
+    UdpSocket socket_;
+    std::string remote_addr_;
+    uint16_t port_;
+    uint16_t remote_port_;
+    Buffer buffer_;
+    uint16_t received_block_;
+    Status status_;
 };
 
 #endif // TFTPCLIENT_H

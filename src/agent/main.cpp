@@ -39,11 +39,11 @@ int main(int argc, char **argv)
     TFTPClient client(host, port);
 
     const auto begin = std::chrono::steady_clock::now();
-    const TFTPClient::Status status = opCode == 1 ? client.get(filename) : client.put(filename);
+    const TFTPClient::Status status = opCode == 1 ? client.Get(filename) : client.Put(filename);
     const auto end = std::chrono::steady_clock::now();
 
     if (status != TFTPClient::Status::Success) {
-        printf("%s\n\n", client.errorDescription(status).c_str());
+        printf("%s\n\n", client.ErrorDescription(status).c_str());
         return 1;
     }
 
