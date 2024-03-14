@@ -13,15 +13,15 @@ class TFTPClient
 
 public:
     enum class Status {
-        Success = 0,
-        InvalidSocket,
-        WriteError,
-        ReadError,
-        UnexpectedPacketReceived,
-        EmptyFilename,
-        OpenFileError,
-        WriteFileError,
-        ReadFileError
+        kSuccess = 0,
+        kInvalidSocket,
+        kWriteError,
+        kReadError,
+        kUnexpectedPacketReceived,
+        kEmptyFilename,
+        kOpenFileError,
+        kWriteFileError,
+        kReadFileError
     };
 
     TFTPClient(const std::string &server_addr, uint16_t port);

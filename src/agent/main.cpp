@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     const TFTPClient::Status status = opCode == 1 ? client.Get(filename) : client.Put(filename);
     const auto end = std::chrono::steady_clock::now();
 
-    if (status != TFTPClient::Status::Success) {
+    if (status != TFTPClient::Status::kSuccess) {
         printf("%s\n\n", client.ErrorDescription(status).c_str());
         return 1;
     }
