@@ -61,12 +61,11 @@ bool UdpSocket::Bind(const char *local_addr, uint16_t local_port)
     }
 
     int broadcast = 1;
-    int result =
-            setsockopt(socket_, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
+    int result = setsockopt(socket_, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
     if (result != 0) {
         return false;
     }
-
+    CHECKING HERE
     struct sockaddr_in localAddr;
     memset(&localAddr, '\0', sizeof(localAddr));
 
