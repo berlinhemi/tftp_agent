@@ -35,8 +35,8 @@ public:
     bool Bind(uint16_t local_port);
     void Abort();
 
-    int64_t ReadDatagram(char *data, int64_t max_len, char *host = nullptr, uint16_t *port = nullptr);
-    int64_t WriteDatagram(const char *data, int64_t len, const char *host, uint16_t port);
+    ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
+    ssize_t WriteDatagram(const char *data, size_t len, const char *host, uint16_t port);
 
     const char *LocalAddress() const;
     uint16_t LocalPort() const;
