@@ -7,6 +7,7 @@ int main(int argc, char **argv)
     // Usage: 192.168.1.104 get example.txt
 
     auto printInfo = []() {
+        
         printf("\nTFTP Client\n  "
                "Usage:   tftp 'server' [get | put] 'file'\n  "
                "Example: tftp 192.168.1.104 get example.txt\n\n");
