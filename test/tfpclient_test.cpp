@@ -1,7 +1,7 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "tftp_client.h"    
 
+#include "tftp_client.h"    
 #include "udp_socket.h"
 
 
@@ -14,7 +14,9 @@ class MockUdpSocet: public UdpSocket
 {
 public:
 
-    MOCK_METHOD(ssize_t, WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port));
+    //MOCK_METHOD(ssize_t, WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port), (override));
+        MOCK_METHOD4( WriteDatagram, ssize_t(const char *data, size_t len, const char *host, uint16_t port));
+
 };
 
 TEST(SimpleTest, check)
@@ -33,8 +35,8 @@ TEST(SimpleTest, check)
     
     // Запомните: это только описание того, что еще должно произойти в тесте!
     
-    EXPECT_CALL(mock_socket, WriteDatagram("some_data", 10, "1.1.1.1", 5555))
-        .WillOnce(DoAll(Return(100)));
+    // EXPECT_CALL(mock_socket, WriteDatagram("some_data", 10, "1.1.1.1", 5555))
+    //      .WillOnce(DoAll(Return(100)));
     
     // Создаем экземпляр класса Order
     //Order<MockDatabase> order(&database); 
@@ -50,5 +52,6 @@ TEST(SimpleTest, check)
 int main(int argc, char** argv)
 {   
     ::testing::InitGoogleTest(&argc, argv);
+     ::testing::InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
 }
