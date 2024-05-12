@@ -35,8 +35,8 @@ TEST(SimpleTest, check)
     
     // Запомните: это только описание того, что еще должно произойти в тесте!
     
-    // EXPECT_CALL(mock_socket, WriteDatagram("some_data", 10, "1.1.1.1", 5555))
-    //      .WillOnce(DoAll(Return(100)));
+     EXPECT_CALL(mock_socket, WriteDatagram("some_data", 10, "1.1.1.1", 5555))
+          .WillOnce(DoAll(Return(100)));
     
     // Создаем экземпляр класса Order
     //Order<MockDatabase> order(&database); 
