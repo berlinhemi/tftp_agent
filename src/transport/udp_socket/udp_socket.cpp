@@ -133,6 +133,7 @@ int64_t UdpSocket::WriteDatagram(const char *data, size_t len, const char *host,
     }
 
     struct sockaddr_in remoteAddr;
+    
     remoteAddr.sin_family = AF_INET;
     remoteAddr.sin_addr.s_addr = host != nullptr ? inet_addr(host) : INADDR_ANY;
     remoteAddr.sin_port = htons(port);
