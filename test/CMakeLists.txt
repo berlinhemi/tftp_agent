@@ -9,5 +9,12 @@ include_directories(${PROJECT_SOURCE_DIR}/src/transport/udp_socket)
 
 file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
 
-add_executable(runUnitTests ${TEST_SRC_FILES})
-target_link_libraries(runUnitTests gtest gmock udp_socket gtest_main)
+#add_executable(runUnitTests ${TEST_SRC_FILES})
+add_executable(simple_test tfpclient_test.cpp)
+#message(TEST_SRC_FILES="${TEST_SRC_FILES}")
+target_link_libraries(simple_test gtest gmock udp_socket gtest_main)
+
+add_test(NAME SimpleTest
+        COMMAND simple_test
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
