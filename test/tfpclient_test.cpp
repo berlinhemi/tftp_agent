@@ -15,7 +15,7 @@ class MockUdpSocet: public UdpSocket
 public:
 
     //MOCK_METHOD(ssize_t, WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port), (override));
-        MOCK_METHOD4( WriteDatagram, ssize_t(const char *data, size_t len, const char *host, uint16_t port));
+    MOCK_METHOD(ssize_t,  WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port));
 
 };
 

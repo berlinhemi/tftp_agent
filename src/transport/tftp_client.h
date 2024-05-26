@@ -44,7 +44,7 @@ private:
     Result GetFile(std::fstream &file);
     Result PutFile(std::fstream &file);
 
-    UdpSocket socket_;
+    UdpSocket socket_;//change to agregation (?)
     std::string remote_addr_;
     uint16_t port_;
     uint16_t remote_port_;
