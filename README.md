@@ -9,6 +9,7 @@
 
 ### TODO: 
 - refactor according GStyle
+- char* to std::string(?)
 
 -  **...**: ...
 -  **...**: ...
