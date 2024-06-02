@@ -25,11 +25,14 @@ public:
     };
 
     TFTPClient(const std::string &server_addr, uint16_t port);
+    TFTPClient(UdpSocket *udp_sock, const std::string &server_addr, uint16_t port);
 
     Status Get(const std::string &file_name);
     Status Put(const std::string &file_name);
 
     std::string ErrorDescription(Status code);
+
+    ~TFTPClient();
 
 private:
     static const uint8_t kHeaderSize = 4;
@@ -44,7 +47,7 @@ private:
     Result GetFile(std::fstream &file);
     Result PutFile(std::fstream &file);
 
-    UdpSocket socket_;//change to agregation (?)
+    UdpSocket* socket_;//change to agregation (?)
     std::string remote_addr_;
     uint16_t port_;
     uint16_t remote_port_;

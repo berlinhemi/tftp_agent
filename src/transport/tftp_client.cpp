@@ -9,8 +9,18 @@ TFTPClient::TFTPClient(const std::string &server_addr, uint16_t port)
     , remote_port_(0)
     , received_block_(0)
 {
-    status_ = socket_.Init() ? Status::kSuccess : Status::kInvalidSocket;
+    socket_ = new UdpSocket();
+    status_ = socket_->Init() ? Status::kSuccess : Status::kInvalidSocket;
 }
+
+TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t port)
+    : socket_(sock)
+    , status_(Status::kSuccess)
+    , remote_addr_(server_addr)
+    , port_(port)
+    , remote_port_(0)
+    , received_block_(0)
+{}
 
 TFTPClient::Status TFTPClient::Get(const std::string &file_name)
 {
@@ -123,7 +133,7 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string &file_name, OpCode 
 
     const auto packetSize = std::distance(&buffer_[0], end);
     const auto writtenBytes =
-            socket_.WriteDatagram(&buffer_[0], packetSize, remote_addr_.c_str(), port_);
+            socket_->WriteDatagram(&buffer_[0], packetSize, remote_addr_.c_str(), port_);
     if (writtenBytes != packetSize) {
         return std::make_pair(Status::kWriteError, writtenBytes);
     }
@@ -139,7 +149,7 @@ TFTPClient::Result TFTPClient::SendAck(const char *host, uint16_t port)
     buffer_[1] = static_cast<char>(OpCode::ACK);
 
     const auto bytesWritten =
-            socket_.WriteDatagram(&buffer_[0], packetSize, host, port);
+            socket_->WriteDatagram(&buffer_[0], packetSize, host, port);
     const bool isSuccess = bytesWritten == packetSize;
 
     return std::make_pair(isSuccess ? Status::kSuccess : Status::kWriteError,
@@ -149,7 +159,7 @@ TFTPClient::Result TFTPClient::SendAck(const char *host, uint16_t port)
 TFTPClient::Result TFTPClient::Read()
 {
     const auto receivedBytes =
-            socket_.ReadDatagram(&buffer_[0], buffer_.size(), &remote_addr_[0], &remote_port_);
+            socket_->ReadDatagram(&buffer_[0], buffer_.size(), &remote_addr_[0], &remote_port_);
     if (receivedBytes == -1) {
         std::puts("\nError! No data received.");
         return std::make_pair(Status::kReadError, receivedBytes);
@@ -241,7 +251,7 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
         // DATA
         const auto packetSize = kHeaderSize + file.gcount();
         const auto writtenBytes =
-                socket_.WriteDatagram(&buffer_[0], packetSize, remote_addr_.c_str(), remote_port_);
+                socket_->WriteDatagram(&buffer_[0], packetSize, remote_addr_.c_str(), remote_port_);
         if (writtenBytes != packetSize) {
             return std::make_pair(Status::kWriteError, totalWrittenBytes + writtenBytes);
         }
@@ -257,3 +267,10 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
         printf("\r%lu bytes (%i blocks) written", totalWrittenBytes, currentBlock);
     }
 }
+
+TFTPClient::~TFTPClient()
+{
+    delete socket_;
+    socket_ = nullptr;
+}
+
