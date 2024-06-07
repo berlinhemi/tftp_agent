@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 TFTPClient::TFTPClient(const std::string &server_addr, uint16_t port)
     : remote_addr_(server_addr)
@@ -15,6 +16,7 @@ TFTPClient::TFTPClient(const std::string &server_addr, uint16_t port)
 
 TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t port)
     : socket_(sock)
+    //Not good (for tests only)
     , status_(Status::kSuccess)
     , remote_addr_(server_addr)
     , port_(port)
@@ -134,6 +136,7 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string &file_name, OpCode 
     const auto packetSize = std::distance(&buffer_[0], end);
     const auto writtenBytes =
             socket_->WriteDatagram(&buffer_[0], packetSize, remote_addr_.c_str(), port_);
+    std::cout << "IAM HERE! writtenBytes:" << writtenBytes << std::endl;
     if (writtenBytes != packetSize) {
         return std::make_pair(Status::kWriteError, writtenBytes);
     }

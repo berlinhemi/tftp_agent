@@ -16,7 +16,7 @@ class MockUdpSocket: public UdpSocket
 public:
 
     //MOCK_METHOD(ssize_t, WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port), (override));
-    MOCK_METHOD(ssize_t,  WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port));
+    MOCK_METHOD(ssize_t,  WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port), (override));
 
 };
 
@@ -25,20 +25,19 @@ TEST(SimpleTest, check)
     // Создаем mock-объект, который заменит Database
     //MockUdpSocket* mock_socket = new MockUdpSocket(); 
     MockUdpSocket mock_socket;
+
     const std::string server_addr = "1.1.1.1";
     uint16_t port = 69;
+    //TODO FIXTURE ?
     TFTPClient tftp_cli(&mock_socket, server_addr,  port);
 
     std::array<char, 100> buf;
-    
     buf[0] = 0;
     buf[1] = static_cast<char>(TFTPClient::OpCode::RRQ);
-
     // filename
     const std::string fname = "data.txt";
     char *end = std::strncpy(&buf[2], fname.c_str(), fname.size()) + fname.size();
     *end++ = '\0';
-
     // mode
     std::string mode("octet");
     end = std::strncpy(end, mode.c_str(), mode.size()) + mode.size();
@@ -46,13 +45,16 @@ TEST(SimpleTest, check)
 
     
     //EXPECT_CALL(mock_socket, WriteDatagram(&buf[0], 10, server_addr.c_str(), port));
-    const auto packetSize = std::distance(&buf[0], end);
+    //const auto packetSize = std::distance(&buf[0], end);
     //EXPECT_CALL(mock_socket, WriteDatagram(&buf[0], packetSize, server_addr.c_str(), port));
     EXPECT_CALL(mock_socket, WriteDatagram(_,_,_,_));
 
-    
-    tftp_cli.Get(fname);
+     std::cout << "RUN CODE:";
+    std::cout << (int)tftp_cli.Get(fname);
+     std::cout << "\n";
 
+    //mock_socket.WriteDatagram("ff",1,"ff",44); WORKS FINE
+    
     //delete mock_socket;
     //mock_socket = nullptr;
     // Макрос EXPECT_CALL позволяет описать, 
