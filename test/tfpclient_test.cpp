@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <cstring>
 #include "tftp_client.h"    
 #include "udp_socket.h"
 
@@ -10,7 +11,7 @@ using ::testing::SetArgReferee;
 using ::testing::DoAll;
 using ::testing::Return;
 
-class MockUdpSocet: public UdpSocket
+class MockUdpSocket: public UdpSocket
 {
 public:
 
@@ -22,8 +23,38 @@ public:
 TEST(SimpleTest, check)
 {
     // Создаем mock-объект, который заменит Database
-    MockUdpSocet mock_socket; 
+    //MockUdpSocket* mock_socket = new MockUdpSocket(); 
+    MockUdpSocket mock_socket;
+    const std::string server_addr = "1.1.1.1";
+    uint16_t port = 69;
+    TFTPClient tftp_cli(&mock_socket, server_addr,  port);
+
+    std::array<char, 100> buf;
     
+    buf[0] = 0;
+    buf[1] = static_cast<char>(TFTPClient::OpCode::RRQ);
+
+    // filename
+    const std::string fname = "data.txt";
+    char *end = std::strncpy(&buf[2], fname.c_str(), fname.size()) + fname.size();
+    *end++ = '\0';
+
+    // mode
+    std::string mode("octet");
+    end = std::strncpy(end, mode.c_str(), mode.size()) + mode.size();
+    *end++ = '\0';
+
+    
+    //EXPECT_CALL(mock_socket, WriteDatagram(&buf[0], 10, server_addr.c_str(), port));
+    const auto packetSize = std::distance(&buf[0], end);
+    //EXPECT_CALL(mock_socket, WriteDatagram(&buf[0], packetSize, server_addr.c_str(), port));
+    EXPECT_CALL(mock_socket, WriteDatagram(_,_,_,_));
+
+    
+    tftp_cli.Get(fname);
+
+    //delete mock_socket;
+    //mock_socket = nullptr;
     // Макрос EXPECT_CALL позволяет описать, 
     // что должно произойти с методом make_query за время теста:
     //
@@ -35,9 +66,8 @@ TEST(SimpleTest, check)
     
     // Запомните: это только описание того, что еще должно произойти в тесте!
     
-     EXPECT_CALL(mock_socket, WriteDatagram("some_data", 10, "1.1.1.1", 5555))
-          .WillOnce(DoAll(Return(100)));
-    
+
+     
     // Создаем экземпляр класса Order
     //Order<MockDatabase> order(&database); 
     

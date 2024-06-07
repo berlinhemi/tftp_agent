@@ -11,3 +11,4 @@ add_executable (agent
 
 
 add_library(udp_socket transport/udp_socket/udp_socket.cpp)
+add_library(tftp_client transport/tftp_client.cpp)

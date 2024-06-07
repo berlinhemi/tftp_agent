@@ -7,11 +7,12 @@
 
 class TFTPClient
 {
-    enum class OpCode {
-        RRQ = 1, WRQ, DATA, ACK, ERR, OACK
-    };
+   
 
 public:
+     enum class OpCode {
+        RRQ = 1, WRQ, DATA, ACK, ERR, OACK
+    };
     enum class Status {
         kSuccess = 0,
         kInvalidSocket,

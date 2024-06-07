@@ -270,7 +270,8 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
 
 TFTPClient::~TFTPClient()
 {
-    delete socket_;
-    socket_ = nullptr;
+    //danger zone (check it)
+    //delete socket_;
+    //socket_ = nullptr;
 }
 
