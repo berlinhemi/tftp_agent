@@ -10,6 +10,7 @@
 ### TODO: 
 - refactor according GStyle
 - char* to std::string(?)
+- add method const
 
 -  **...**: ...
 -  **...**: ...
