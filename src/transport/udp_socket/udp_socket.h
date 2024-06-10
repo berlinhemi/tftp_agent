@@ -31,20 +31,20 @@ public:
     ~UdpSocket();
 
     bool Init();
-    bool Bind(const char *local_address, uint16_t local_port);
-    bool Bind(uint16_t local_port);
+    //bool Bind(const char *local_address, uint16_t local_port);
+    //bool Bind(uint16_t local_port);
     void Abort();
 
     virtual ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
     virtual ssize_t WriteDatagram(const char *data, size_t len, const char *host, uint16_t port);
 
-    const char *LocalAddress() const;
-    uint16_t LocalPort() const;
+    //const char *LocalAddress() const;
+    //uint16_t LocalPort() const;
 
 private:
     //max: 4 octets (4*3) + 3 dots 
-    char address_[15];
-    uint16_t port_;
+    //char address_[15];
+    //uint16_t port_;
     int socket_;
 };
 

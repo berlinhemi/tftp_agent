@@ -10,9 +10,10 @@
 #include <cstring> // memset
 
 UdpSocket::UdpSocket()
-    : port_(0)
-    , socket_(-1)
-    , address_{}
+    : 
+    socket_(-1)
+    //,port_(0)
+    //, address_{}
 {
    // memset(address_, 0, 15);
 }
@@ -144,12 +145,12 @@ int64_t UdpSocket::WriteDatagram(const char *data, size_t len, const char *host,
     return size;
 }
 
-const char* UdpSocket::LocalAddress() const
-{
-    return address_;
-}
+// const char* UdpSocket::LocalAddress() const
+// {
+//     return address_;
+// }
 
-uint16_t UdpSocket::LocalPort() const
-{
-    return port_;
-}
+// uint16_t UdpSocket::LocalPort() const
+// {
+//     return port_;
+// }
