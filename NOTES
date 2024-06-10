@@ -1,2 +1,6 @@
 debug info: https://stackoverflow.com/questions/49583381/how-to-debug-a-cmake-make-project-in-vscode
 mock example: https://pro-prof.com/forums/topic/mock-объекты-в-google-c-mocking-framework
+
+GTEST:
+    GMOCK: do not compare addresses! (char*, int*, etc)
+    need to switch char* to string (to compare strings) and char*,size to vector??? (to compare buffers)

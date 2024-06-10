@@ -35,7 +35,7 @@ public:
     bool Bind(uint16_t local_port);
     void Abort();
 
-    ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
+    virtual ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
     virtual ssize_t WriteDatagram(const char *data, size_t len, const char *host, uint16_t port);
 
     const char *LocalAddress() const;
@@ -46,7 +46,6 @@ private:
     char address_[15];
     uint16_t port_;
     int socket_;
-
 };
 
 #endif // UDP_SOCKET_H
