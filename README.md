@@ -9,6 +9,7 @@
 
 ### TODO: 
 - refactor according GStyle
+- bind() is not called: fix bug
 - char* to std::string(?)
 - add method const
 
