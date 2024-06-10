@@ -109,10 +109,10 @@ ssize_t UdpSocket::ReadDatagram(char *data, size_t maxlen, char *host, uint16_t 
     socklen_t remoteAddrLen = sizeof(struct sockaddr_in);
     memset(&remoteAddr, '\0', sizeof(remoteAddr));
 
-    const ssize_t size =
-            recvfrom(socket_, data, maxlen,
-                       MSG_WAITFORONE, // blocking operation! Use MSG_DONTWAIT for non blocking
-                       (struct sockaddr *)&remoteAddr, &remoteAddrLen);
+    const ssize_t size =  recvfrom(socket_
+                                    ,data, maxlen
+                                    ,MSG_WAITFORONE // blocking operation! Use MSG_DONTWAIT for non blocking
+                                    ,(struct sockaddr *)&remoteAddr, &remoteAddrLen);
     if (size > 0) {
         if (host != nullptr) {
             //inet_pton(AF_INET, inet_ntoa( senderAddr.sin_addr ), host);
@@ -139,8 +139,10 @@ int64_t UdpSocket::WriteDatagram(const char *data, size_t len, const char *host,
     remoteAddr.sin_port = htons(port);
     memset(remoteAddr.sin_zero, '\0', sizeof(remoteAddr.sin_zero));
 
-    const ssize_t size =
-            sendto(socket_, data, len, MSG_DONTWAIT, (struct sockaddr*)&remoteAddr, sizeof(remoteAddr));
+    const ssize_t size = sendto(socket_
+                                ,data, len
+                                ,MSG_DONTWAIT
+                                ,(struct sockaddr*)&remoteAddr, sizeof(remoteAddr));
 
     return size;
 }

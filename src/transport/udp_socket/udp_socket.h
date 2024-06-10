@@ -45,7 +45,7 @@ private:
     //max: 4 octets (4*3) + 3 dots 
     //char address_[15];
     //uint16_t port_;
-    int socket_;
+    int socket_ {-1};
 };
 
 #endif // UDP_SOCKET_H
