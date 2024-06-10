@@ -9,14 +9,7 @@
 
 #include <cstring> // memset
 
-UdpSocket::UdpSocket()
-    : 
-    socket_(-1)
-    //,port_(0)
-    //, address_{}
-{
-   // memset(address_, 0, 15);
-}
+
 
 UdpSocket::~UdpSocket()
 {
@@ -99,50 +92,48 @@ void UdpSocket::Abort()
     }
 }
 
-ssize_t UdpSocket::ReadDatagram(char *data, size_t maxlen, char *host, uint16_t *port)
+ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& data, size_t max_len,  std::string& host, uint16_t* port)
 {
-    if ((data == nullptr) || (maxlen == 0) || (socket_ < 0)) {
+    if ( socket_ < 0) {
         return 0;
     }
     
-    struct sockaddr_in remoteAddr;
-    socklen_t remoteAddrLen = sizeof(struct sockaddr_in);
-    memset(&remoteAddr, '\0', sizeof(remoteAddr));
+    struct sockaddr_in remote_addr;
+    socklen_t remote_addr_len = sizeof(struct sockaddr_in);
+    memset(&remote_addr, '\0', sizeof(remote_addr));
 
     const ssize_t size =  recvfrom(socket_
-                                    ,data, maxlen
+                                    ,&data[0], max_len
                                     ,MSG_WAITFORONE // blocking operation! Use MSG_DONTWAIT for non blocking
-                                    ,(struct sockaddr *)&remoteAddr, &remoteAddrLen);
+                                    ,(struct sockaddr *)&remote_addr, &remote_addr_len);
     if (size > 0) {
-        if (host != nullptr) {
-            //inet_pton(AF_INET, inet_ntoa( senderAddr.sin_addr ), host);
-            strcpy(host, inet_ntoa(remoteAddr.sin_addr));
-        }
+
+        host = inet_ntoa(remote_addr.sin_addr);
         if (port != nullptr) {
-            *port = ntohs(remoteAddr.sin_port);
+            *port = ntohs(remote_addr.sin_port);
         }
     }
 
     return size;
 }
 
-int64_t UdpSocket::WriteDatagram(const char *data, size_t len, const char *host, uint16_t port)
+int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data, const std::string& host, uint16_t port)
 {
-    if ((data == nullptr) || (len == 0) || (socket_ < 0)) {
+    if (data.empty() || socket_ < 0) {
         return 0;
     }
 
-    struct sockaddr_in remoteAddr;
+    struct sockaddr_in remote_addr;
     
-    remoteAddr.sin_family = AF_INET;
-    remoteAddr.sin_addr.s_addr = host != nullptr ? inet_addr(host) : INADDR_ANY;
-    remoteAddr.sin_port = htons(port);
-    memset(remoteAddr.sin_zero, '\0', sizeof(remoteAddr.sin_zero));
+    remote_addr.sin_family = AF_INET;
+    remote_addr.sin_addr.s_addr = inet_addr(host.c_str());
+    remote_addr.sin_port = htons(port);
+    memset(remote_addr.sin_zero, '\0', sizeof(remote_addr.sin_zero));
 
     const ssize_t size = sendto(socket_
-                                ,data, len
+                                ,&data[0], data.size()
                                 ,MSG_DONTWAIT
-                                ,(struct sockaddr*)&remoteAddr, sizeof(remoteAddr));
+                                ,(struct sockaddr*)&remote_addr, sizeof(remote_addr));
 
     return size;
 }

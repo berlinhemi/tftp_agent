@@ -1,9 +1,12 @@
 #ifndef UDP_SOCKET_H
 #define UDP_SOCKET_H
 
+#include <vector>
+#include <string>
 #include <stdio.h>
 #include <cstdint>
 
+typedef unsigned char BYTE;
 /* Socket timeout
  *
     // LINUX
@@ -27,7 +30,7 @@
 class UdpSocket
 {
 public:
-    UdpSocket();
+    UdpSocket() = default;
     ~UdpSocket();
 
     bool Init();
@@ -35,8 +38,10 @@ public:
     //bool Bind(uint16_t local_port);
     void Abort();
 
-    virtual ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
-    virtual ssize_t WriteDatagram(const char *data, size_t len, const char *host, uint16_t port);
+   // virtual ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
+    virtual ssize_t ReadDatagram( std::vector<BYTE>& data, std::string& host, uint16_t* port = nullptr);
+    virtual ssize_t WriteDatagram(const std::vector<BYTE>& data, const std::string& host, uint16_t port);
+    //irtual ssize_t WriteDatagram(const char *data, size_t len, const char *host, uint16_t port);
 
     //const char *LocalAddress() const;
     //uint16_t LocalPort() const;
