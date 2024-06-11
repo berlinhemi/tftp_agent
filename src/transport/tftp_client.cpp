@@ -127,12 +127,12 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
     buffer_[1] = static_cast<char>(code);
 
     // filename
-    char *end = std::strncpy((char*)&buffer_[2], file_name.c_str(), file_name.size()) + file_name.size();
+    char *end = strcpy((char*)&buffer_[2], file_name.c_str()) + file_name.size();
     end++;
     //*end++ = '\0';
 
     // mode
-    end = std::strncpy(end, mode.c_str(), mode.size()) + mode.size();
+    end = std::strcpy(end, mode.c_str()) + mode.size();
     end++;
     //*end++ = '\0';
 
