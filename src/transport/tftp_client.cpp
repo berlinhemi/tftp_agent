@@ -120,6 +120,7 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string &file_name, OpCode 
         return std::make_pair(Status::kEmptyFilename, 0);
     }
 
+
     std::string mode("octet");
 
     buffer_[0] = 0;
@@ -144,16 +145,15 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string &file_name, OpCode 
     return std::make_pair(Status::kSuccess, writtenBytes);
 }
 
-TFTPClient::Result TFTPClient::SendAck(const char *host, uint16_t port)
+TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 {
-    const std::size_t packetSize = 4;
+    const std::size_t data_size = 4;
 
     buffer_[0] = 0;
-    buffer_[1] = static_cast<char>(OpCode::ACK);
+    buffer_[1] = static_cast<BYTE>(OpCode::ACK);
 
-    const auto bytesWritten =
-            socket_->WriteDatagram(&buffer_[0], packetSize, host, port);
-    const bool isSuccess = bytesWritten == packetSize;
+    const auto bytes_written = socket_->WriteDatagram(buffer_, host, port);
+    const bool is_success = bytes_written == data_size;
 
     return std::make_pair(isSuccess ? Status::kSuccess : Status::kWriteError,
                           isSuccess ? packetSize : bytesWritten);
