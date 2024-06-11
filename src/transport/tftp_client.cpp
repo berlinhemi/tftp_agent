@@ -1,5 +1,6 @@
 #include "tftp_client.h"
 
+#include <algorithm>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -114,35 +115,37 @@ std::string TFTPClient::ErrorDescription(TFTPClient::Status code)
     }
 }
 
-TFTPClient::Result TFTPClient::SendRequest(const std::string &file_name, OpCode code)
+TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode code)
 {
     if (file_name.empty()) {
         return std::make_pair(Status::kEmptyFilename, 0);
     }
 
-
-    std::string mode("octet");
+    const std::string mode("octet");
 
     buffer_[0] = 0;
     buffer_[1] = static_cast<char>(code);
 
     // filename
-    char *end = std::strncpy(&buffer_[2], file_name.c_str(), file_name.size()) + file_name.size();
-    *end++ = '\0';
+    char *end = std::strncpy((char*)&buffer_[2], file_name.c_str(), file_name.size()) + file_name.size();
+    end++;
+    //*end++ = '\0';
 
     // mode
     end = std::strncpy(end, mode.c_str(), mode.size()) + mode.size();
-    *end++ = '\0';
+    end++;
+    //*end++ = '\0';
 
-    const auto packetSize = std::distance(&buffer_[0], end);
-    const auto writtenBytes =
-            socket_->WriteDatagram(&buffer_[0], packetSize, remote_addr_.c_str(), port_);
-    std::cout << "IAM HERE! writtenBytes:" << writtenBytes << std::endl;
-    if (writtenBytes != packetSize) {
-        return std::make_pair(Status::kWriteError, writtenBytes);
+    ssize_t size = std::distance((char*)&buffer_[0], end);
+    std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + size);
+    ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_.c_str(), port_);
+
+    std::cout << "IAM HERE! writtenBytes:" << written_bytes << std::endl;
+    if (written_bytes != size) {
+        return std::make_pair(Status::kWriteError, written_bytes);
     }
 
-    return std::make_pair(Status::kSuccess, writtenBytes);
+    return std::make_pair(Status::kSuccess, written_bytes);
 }
 
 TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
@@ -151,37 +154,41 @@ TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 
     buffer_[0] = 0;
     buffer_[1] = static_cast<BYTE>(OpCode::ACK);
+    //next 2 bytes stored received block id
 
-    const auto bytes_written = socket_->WriteDatagram(buffer_, host, port);
-    const bool is_success = bytes_written == data_size;
+    std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + data_size);
+    ssize_t bytes_written = socket_->WriteDatagram(data, host, port);
 
-    return std::make_pair(isSuccess ? Status::kSuccess : Status::kWriteError,
-                          isSuccess ? packetSize : bytesWritten);
+    bool is_success = bytes_written == data_size;
+
+    return std::make_pair(is_success ? Status::kSuccess : Status::kWriteError,
+                          is_success ? data_size : bytes_written);
 }
 
 TFTPClient::Result TFTPClient::Read()
 {
-    const auto receivedBytes =
-            socket_->ReadDatagram(&buffer_[0], buffer_.size(), &remote_addr_[0], &remote_port_);
-    if (receivedBytes == -1) {
+    std::vector<BYTE> data (buffer_.size());
+    ssize_t received_bytes = socket_->ReadDatagram(data, data.size(), remote_addr_, &remote_port_);
+    if (received_bytes == -1) {
         std::puts("\nError! No data received.");
-        return std::make_pair(Status::kReadError, receivedBytes);
+        return std::make_pair(Status::kReadError, received_bytes);
     }
+    std::copy_n(data.begin(), data.size(), buffer_.begin());
 
-    const auto code = static_cast<OpCode>(buffer_[1]);
+    OpCode code = static_cast<OpCode>(buffer_[1]);
     switch (code) {
     case OpCode::DATA:
         received_block_ = ((uint8_t)buffer_[2] << 8) | (uint8_t)buffer_[3];
-        return std::make_pair(Status::kSuccess, receivedBytes - kHeaderSize);
+        return std::make_pair(Status::kSuccess, received_bytes - kHeaderSize);
     case OpCode::ACK:
         received_block_ = ((uint8_t)buffer_[2] << 8) | (uint8_t)buffer_[3];
         return std::make_pair(Status::kSuccess, received_block_);
     case OpCode::ERR:
         printf("\nError! Message from remote host: %s", &buffer_[4]);
-        return std::make_pair(Status::kReadError, receivedBytes);
+        return std::make_pair(Status::kReadError, received_bytes);
     default:
         printf("\nError! Unexpected packet received! Type: %i", code);
-        return std::make_pair(Status::kUnexpectedPacketReceived, receivedBytes);
+        return std::make_pair(Status::kUnexpectedPacketReceived, received_bytes);
     }
 }
 
@@ -205,7 +212,7 @@ TFTPClient::Result TFTPClient::GetFile(std::fstream &file)
             ++totalReceivedBlocks;
             totalReceivedDataBytes += receivedDataBytes;
 
-            file.write(&buffer_[kHeaderSize], receivedDataBytes);
+            file.write((char*)&buffer_[kHeaderSize], receivedDataBytes);
             if (file.bad()) {
                 return std::make_pair(Status::kWriteFileError, totalReceivedDataBytes);
             }
@@ -229,45 +236,45 @@ TFTPClient::Result TFTPClient::GetFile(std::fstream &file)
 TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
 {
     Result result;
-    uint16_t currentBlock = 0;
-    unsigned long totalWrittenBytes = 0;
+    uint16_t current_block = 0;
+    unsigned long total_written_bytes = 0;
 
     while (true) {
-        if (currentBlock == received_block_) {
+        if (current_block == received_block_) {
             if (file.eof()) {
-                return std::make_pair(Status::kSuccess, totalWrittenBytes);
+                return std::make_pair(Status::kSuccess, total_written_bytes);
             }
-            ++currentBlock;
+            ++current_block;
 
             buffer_[0] = 0;
             buffer_[1] = static_cast<char>(OpCode::DATA);
-            buffer_[2] = static_cast<uint8_t>(currentBlock >> 8);
-            buffer_[3] = static_cast<uint8_t>(currentBlock & 0x00FF);
+            buffer_[2] = static_cast<uint8_t>(current_block >> 8);
+            buffer_[3] = static_cast<uint8_t>(current_block & 0x00FF);
 
             // read from file
-            file.read(&buffer_[kHeaderSize], kDataSize);
+            file.read((char*)&buffer_[kHeaderSize], kDataSize);
             if (file.bad()) {
-                return std::make_pair(Status::kReadFileError, totalWrittenBytes);
+                return std::make_pair(Status::kReadFileError, total_written_bytes);
             }
         }
 
         // DATA
-        const auto packetSize = kHeaderSize + file.gcount();
-        const auto writtenBytes =
-                socket_->WriteDatagram(&buffer_[0], packetSize, remote_addr_.c_str(), remote_port_);
-        if (writtenBytes != packetSize) {
-            return std::make_pair(Status::kWriteError, totalWrittenBytes + writtenBytes);
+        ssize_t packet_size = kHeaderSize + file.gcount();
+        std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + packet_size);
+        ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, remote_port_);
+        if (written_bytes != packet_size) {
+            return std::make_pair(Status::kWriteError, total_written_bytes + written_bytes);
         }
 
         // ACK
         result = this->Read();
         if (result.first != Status::kSuccess) {
-            return std::make_pair(result.first, totalWrittenBytes + packetSize);
+            return std::make_pair(result.first, total_written_bytes + packet_size);
         }
 
-        totalWrittenBytes += file.gcount();
+        total_written_bytes += file.gcount();
 
-        printf("\r%lu bytes (%i blocks) written", totalWrittenBytes, currentBlock);
+        printf("\r%lu bytes (%i blocks) written", total_written_bytes, current_block);
     }
 }
 

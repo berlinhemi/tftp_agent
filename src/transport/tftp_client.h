@@ -43,7 +43,7 @@ private:
     //using Buffer = std::array<char, kHeaderSize + kDataSize>;
 
     Result SendRequest(const std::string& file_name, OpCode code);
-    Result SendAck(const char* host, uint16_t port);
+    Result SendAck(const std::string& host, uint16_t port);
     Result Read();
     Result GetFile(std::fstream& file);
     Result PutFile(std::fstream& file);
@@ -53,7 +53,7 @@ private:
     uint16_t port_;
     uint16_t remote_port_;
     //Buffer buffer_;
-    std::vector<BYTE> buffer_;
+    std::array<BYTE, kHeaderSize + kDataSize> buffer_;
     uint16_t received_block_;
     Status status_;
 };
