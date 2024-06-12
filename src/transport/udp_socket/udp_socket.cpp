@@ -94,7 +94,7 @@ void UdpSocket::Abort()
 
 ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& data, size_t max_len,  std::string& host, uint16_t* port)
 {
-    if ( socket_ < 0) {
+    if ( socket_ < 0 || data.size() < max_len) {
         return 0;
     }
     

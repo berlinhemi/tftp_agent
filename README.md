@@ -11,7 +11,8 @@
 ~ refactor according GStyle and CppGuide
 + bind() is not called: fix bug
 + char* to std::string(?)
-- add const to some methods 
+- add const to some methods
+- move console output (?) 
 
 -  **...**: ...
 -  **...**: ...
