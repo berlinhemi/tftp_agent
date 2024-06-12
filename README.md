@@ -8,10 +8,10 @@
 ## ✨ Features
 
 ### TODO: 
-- refactor according GStyle
-- bind() is not called: fix bug
-- char* to std::string(?)
-- add method const
+~ refactor according GStyle and CppGuide
++ bind() is not called: fix bug
++ char* to std::string(?)
+- add const to some methods 
 
 -  **...**: ...
 -  **...**: ...
