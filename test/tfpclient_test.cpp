@@ -16,7 +16,9 @@ class MockUdpSocket: public UdpSocket
 {
 public:
 
-    MOCK_METHOD(ssize_t, WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port), (override));
+    MOCK_METHOD(ssize_t, 
+    WriteDatagram, (const std::vector<BYTE>& buf,const std::string& host, uint16_t port), 
+    (override));
     //MOCK_METHOD(ssize_t,  WriteDatagram, (const char *data, size_t len, const char *host, uint16_t port));
 
 };
@@ -32,25 +34,27 @@ TEST(SimpleTest, check)
     //TODO FIXTURE ?
     TFTPClient tftp_cli(&mock_socket, server_addr,  port);
 
-    std::array<char, 516UL> buf;
-    buf[0] = 0;
-    buf[1] = static_cast<char>(TFTPClient::OpCode::RRQ);
+    std::vector<BYTE> buf;
+    buf.push_back(0);
+    buf.push_back(static_cast<char>(TFTPClient::OpCode::RRQ));
+   
     // filename
     const std::string fname = "data.txt";
-    char *end = std::strncpy(&buf[2], fname.c_str(), fname.size()) + fname.size();
-    *end++ = '\0';
+    buf.insert(buf.end(), fname.begin(), fname.end());
+    buf.push_back(0);
+    
     // mode
     std::string mode("octet");
-    end = std::strncpy(end, mode.c_str(), mode.size()) + mode.size();
-    *end++ = '\0';
+    buf.insert(buf.end(), mode.begin(), mode.end());
+    buf.push_back(0);
 
     
     //EXPECT_CALL(mock_socket, WriteDatagram(&buf[0], 10, server_addr.c_str(), port));
-    const auto packetSize = std::distance(&buf[0], end);
+    //const auto packet_size = std::distance((char*)&buf[0], end);
     //EXPECT_CALL(mock_socket, WriteDatagram(&buf[0], packetSize, server_addr.c_str(), port));
 
     //cant compare pointers (buf and server addr)!!!
-    EXPECT_CALL(mock_socket, WriteDatagram(_,packetSize,_,port));
+    EXPECT_CALL(mock_socket, WriteDatagram(buf, server_addr, port));
 
      std::cout << "RUN CODE:";
     std::cout << (int)tftp_cli.Get(fname);
