@@ -169,6 +169,7 @@ TFTPClient::Result TFTPClient::Read()
         std::puts("\nError! No data received.");
         return std::make_pair(Status::kReadError, received_bytes);
     }
+    //append received datagram to buffer_
     std::copy_n(tmp_buffer.begin(), tmp_buffer.size(), buffer_.begin());
 
     OpCode code = static_cast<OpCode>(buffer_[1]);
