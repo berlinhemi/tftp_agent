@@ -38,7 +38,7 @@ public:
 private:
     static const uint8_t kHeaderSize = 4;
     static const uint16_t kDataSize = 512;
-
+    
     using Result = std::pair<Status, int32_t>;
     //using Buffer = std::array<char, kHeaderSize + kDataSize>;
 
