@@ -45,11 +45,12 @@ TEST(TFTPCliTest, CheckReadRequest)
     const std::string server_addr = "1.1.1.1";
     uint16_t port = 69;
     TFTPClient tftp_cli(&mock_socket, server_addr,  port);
-
+    
+    //RRQ
     const std::string fname= "data.txt";
     std::vector<BYTE> buf = CreateRequestBuffer(fname, TFTPClient::OpCode::RRQ);
     
-    //RRQ
+    
     EXPECT_CALL(mock_socket, WriteDatagram(buf, server_addr, port));
     tftp_cli.Get(fname);
     
@@ -62,10 +63,11 @@ TEST(TFTPCliTest, CheckWriteRequest)
     uint16_t port = 69;
     TFTPClient tftp_cli(&mock_socket, server_addr,  port);
 
+    //WRQ
     const std::string fname= "data.txt";
     std::vector<BYTE> buf = CreateRequestBuffer(fname, TFTPClient::OpCode::WRQ);
   
-    //WRQ
+    
     EXPECT_CALL(mock_socket, WriteDatagram(buf, server_addr, port));
     tftp_cli.Put(fname);
     
