@@ -150,9 +150,9 @@ TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 
     buffer_[0] = 0;
     buffer_[1] = static_cast<BYTE>(OpCode::ACK);
-    //next 2 bytes contain received block id
-    std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + data_size);
+    //next 2 bytes is containing received block id, do not overwrite them
     
+    std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + data_size);
     ssize_t bytes_written = socket_->WriteDatagram(data, host, port);
 
     bool is_success = bytes_written == data_size;
