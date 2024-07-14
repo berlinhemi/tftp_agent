@@ -27,17 +27,20 @@ public:
 std::vector<BYTE> CreateRequestBuffer(const std::string& fname, TFTPClient::OpCode request_code)
 {
     std::vector<BYTE> buf;
+    // opcode (RRQ/WRQ)
     buf.push_back(0);
     buf.push_back(static_cast<char>(request_code));
     // filename
     buf.insert(buf.end(), fname.begin(), fname.end());
     buf.push_back(0);
-    // mode
+    // mode (octet/ascii)
     std::string mode("octet");
     buf.insert(buf.end(), mode.begin(), mode.end());
     buf.push_back(0);
     return buf;
 }
+
+//Move tftp_cli to Fixture (?)
 
 TEST(TFTPCliTest, CheckReadRequest)
 {
@@ -73,6 +76,23 @@ TEST(TFTPCliTest, CheckWriteRequest)
     
 }
 
+TEST(TFTPCliTest, CheckReadFile)
+{
+    MockUdpSocket mock_socket;
+    const std::string server_addr = "1.1.1.1";
+    uint16_t port = 69;
+    TFTPClient tftp_cli(&mock_socket, server_addr,  port);
+
+    //WRQ
+    const std::string fname= "data.txt";
+    std::vector<BYTE> buf = CreateRequestBuffer(fname, TFTPClient::OpCode::WRQ);
+  
+    
+    EXPECT_CALL(mock_socket, WriteDatagram(_, server_addr, port)).Times(1);
+    //EXPECT_CALL(mock_socket, WriteDatagram(_, server_addr, port));
+    tftp_cli.Put(fname);
+    
+}
 
 int main(int argc, char** argv)
 {   
