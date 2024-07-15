@@ -47,7 +47,7 @@ TFTPClient::Status TFTPClient::Get(const std::string &file_name)
     // FILE
     result = this->GetFile(file);
     if (result.first == Status::kSuccess) {
-        //std::cout << "kSuccess: " << result.second << " bytes received!\n";
+        std::cout << "kSuccess: " << result.second << " bytes received!\n";
     }
     return result.first;
 }
@@ -135,7 +135,8 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
     ssize_t size = std::distance((char*)&buffer_[0], end); 
     std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + size);
     ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, port_);
-
+    std::cout << written_bytes << std::endl;
+    std::cout << size << std::endl;
     //std::cout << "IAM HERE! writtenBytes:" << written_bytes << std::endl;
     if (written_bytes != size) {
         return std::make_pair(Status::kWriteError, written_bytes);
