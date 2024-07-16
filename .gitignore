@@ -402,3 +402,4 @@ FodyWeavers.xsd
 *.zip
 build/*
 !CMakeLists.txt
+Testing/*
