@@ -135,9 +135,8 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
     ssize_t size = std::distance((char*)&buffer_[0], end); 
     std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + size);
     ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, initial_port_);
-    std::cout << written_bytes << std::endl;
-    std::cout << size << std::endl;
-    //std::cout << "IAM HERE! writtenBytes:" << written_bytes << std::endl;
+    //std::cout << written_bytes << std::endl;
+    //std::cout << size << std::endl;
     if (written_bytes != size) {
         return std::make_pair(Status::kWriteError, written_bytes);
     }
@@ -170,6 +169,11 @@ TFTPClient::Result TFTPClient::Read()
         std::puts("\nError! No data received.");
         return std::make_pair(Status::kReadError, received_bytes);
     }
+    std::cout <<"buffer received:" << tmp_buffer[0] 
+        << "," << tmp_buffer[1] 
+        << "," << tmp_buffer[2]
+        << "," << tmp_buffer[3]
+        << std::endl;
     //append received datagram to buffer_
     std::copy_n(tmp_buffer.begin(), tmp_buffer.size(), buffer_.begin());
 
@@ -201,10 +205,13 @@ TFTPClient::Result TFTPClient::GetFile(std::fstream &file)
         // DATA
         result = this->Read();
         if (result.first != Status::kSuccess) {
+            std::cout << "Read error"  << std::endl;
             return std::make_pair(result.first, totalReceivedDataBytes + std::max(result.second, 0));
         }
         receivedDataBytes = result.second;
-
+        std::cout << "receivedDataBytes:" << receivedDataBytes << std::endl;
+         std::cout << "received_block_:" << received_block_ << std::endl;
+        
         // write to file
         if ((receivedDataBytes > 0) && (received_block_ > totalReceivedBlocks)) {
             ++totalReceivedBlocks;
@@ -212,6 +219,7 @@ TFTPClient::Result TFTPClient::GetFile(std::fstream &file)
 
             file.write((char*)&buffer_[kHeaderSize], receivedDataBytes);
             if (file.bad()) {
+                //std::cout << "file.bad." << std::endl;
                 return std::make_pair(Status::kWriteFileError, totalReceivedDataBytes);
             }
         }
@@ -219,6 +227,7 @@ TFTPClient::Result TFTPClient::GetFile(std::fstream &file)
         // ACK
         result = this->SendAck(remote_addr_.c_str(), remote_port_);
         if (result.first != Status::kSuccess) {
+            std::cout << "SendAck failed." << std::endl;
             return std::make_pair(result.first, totalReceivedDataBytes);
         }
 
