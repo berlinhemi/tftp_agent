@@ -10,6 +10,7 @@
 using ::testing::_;
 using ::testing::SetArgReferee;
 using ::testing::DoAll;
+using ::testing::SetArrayArgument;
 using ::testing::Return;
 using ::testing::Expectation;
 using ::testing::Pointee;
@@ -24,7 +25,8 @@ public:
         (override));
 
     MOCK_METHOD(ssize_t,  
-        ReadDatagram, (std::vector<BYTE>& data,  size_t max_len,  std::string& host, uint16_t* port),
+        ReadDatagram, (BYTE* data,  size_t max_len,  std::string& host, uint16_t* port),
+         //ReadDatagram, (char* data,  size_t max_len,  std::string& host, uint16_t* port),
          (override));
 
   
@@ -91,50 +93,56 @@ TEST(TFTPCliTest, CheckReadFile)
     uint16_t port = 69;
     TFTPClient tftp_cli(&mock_socket, server_addr,  port);
 
-    //RRQ
+    //Read request
     const std::string target_fname= "data.txt";  
     ssize_t RRQ_packet_size = 2 + target_fname.size() + 1 + strlen("octet") + 1 ;
     Expectation rrq_expectation = EXPECT_CALL(mock_socket, WriteDatagram(_, server_addr, port)).WillOnce(Return(RRQ_packet_size));
     
 
-    
+    //Reply data
     const std::string data_fname= "data_512b.txt";
     const int kHeaderSize = 4;
     const int kDataSize = 512;
+    size_t max_len = kDataSize + kHeaderSize;
     std::vector<BYTE> buffer;
-    buffer.reserve(kHeaderSize + kDataSize);
-    std::cout << "size1: " << buffer.size() << std::endl;
-
+    buffer.reserve(max_len);
     std::fstream file(data_fname, std::ios_base::in | std::ios_base::binary);
     ASSERT_TRUE(file);
-     if (!file) {
-        std::puts("\nError! Can't open file for reading!");
-        return;
-    }
-    
+    //  if (!file) {
+    //     std::puts("\nError! Can't open file for reading!");
+    //     return;
+    // }
     buffer.push_back(0);
     buffer.push_back((BYTE)TFTPClient::OpCode::DATA);
-    buffer.push_back(0);
-    buffer.push_back(0);
+    buffer.push_back(0); //block id
+    buffer.push_back(0); 
        /// ==> FORMULA !!!
      //received_block_ = ((uint8_t)buffer_[2] << 8) | (uint8_t)buffer_[3]; 
   
-    std::cout <<  "size2: " << buffer.size() << std::endl;
     buffer.insert(buffer.begin(),
                std::istream_iterator<BYTE>(file),
                std::istream_iterator<BYTE>());
    
-    std::cout << "OK" << std::endl;
-    std::cout <<  "size3: " << buffer.size() << std::endl;
-    std::cout << buffer[4] << std::endl;
-    std::cout << buffer[5] << std::endl;
+    //std::cout << buffer[4] << std::endl;
 
-    size_t max_len = kDataSize + kHeaderSize;
-    EXPECT_CALL(mock_socket, ReadDatagram(buffer, max_len, server_addr, Pointee(port)))
-    Check port initialization (port/remote_port - server can change ports, )
-        .After(rrq_expectation)
-        .WillOnce(Return(max_len));
-
+    //std::vector<BYTE> data;
+    std::vector<BYTE> data;
+    data.reserve(max_len);
+    //char* data;
+    //char* buffer2;
+    EXPECT_CALL(mock_socket, 
+    ReadDatagram(&data[0], max_len, server_addr, _))
+    // ReadDatagram(&data[0], max_len, server_addr, _))
+      
+        //.After(rrq_expectation)
+       // .WillOnce(Return(max_len))
+       //.WillOnce(SetArrayArgument<0>(&buffer[0], &buffer[0] + max_len))
+       //.WillOnce(SetArrayArgument<0>(buffer2, buffer2 + max_len))
+        .WillOnce(DoAll(
+            SetArrayArgument<0>(&buffer[0], &buffer[0] + max_len)
+            ,Return(max_len)
+            ))
+    ;
     tftp_cli.Get(target_fname);
     
 }

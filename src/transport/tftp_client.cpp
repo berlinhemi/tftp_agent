@@ -165,7 +165,7 @@ TFTPClient::Result TFTPClient::Read()
 {
     std::vector<BYTE> tmp_buffer (buffer_.size());
     ssize_t received_bytes = 
-        socket_->ReadDatagram(tmp_buffer, tmp_buffer.size(), remote_addr_, &remote_port_);
+        socket_->ReadDatagram(&tmp_buffer[0], tmp_buffer.size(), remote_addr_, &remote_port_);
     if (received_bytes == -1) {
         std::puts("\nError! No data received.");
         return std::make_pair(Status::kReadError, received_bytes);
