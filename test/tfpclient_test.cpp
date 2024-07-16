@@ -131,6 +131,7 @@ TEST(TFTPCliTest, CheckReadFile)
 
     size_t max_len = kDataSize + kHeaderSize;
     EXPECT_CALL(mock_socket, ReadDatagram(buffer, max_len, server_addr, Pointee(port)))
+    Check port initialization (port/remote_port - server can change ports, )
         .After(rrq_expectation)
         .WillOnce(Return(max_len));
 
