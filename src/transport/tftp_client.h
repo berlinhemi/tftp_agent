@@ -50,8 +50,8 @@ private:
 
     UdpSocket* socket_;//change to agregation (?)
     std::string remote_addr_;
-    uint16_t port_;
-    uint16_t remote_port_;
+    uint16_t initial_port_;
+    uint16_t remote_port_; //tftp server changes port after first connection
     std::array<BYTE, kHeaderSize + kDataSize> buffer_;
     uint16_t received_block_;
     Status status_;

@@ -7,7 +7,7 @@
 
 TFTPClient::TFTPClient(const std::string &server_addr, uint16_t port)
     : remote_addr_(server_addr)
-    , port_(port)
+    , initial_port_(port)
     , remote_port_(0)
     , received_block_(0)
 {
@@ -20,7 +20,7 @@ TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t
     //Not good (for tests only)
     , status_(Status::kSuccess)
     , remote_addr_(server_addr)
-    , port_(port)
+    , initial_port_(port)
     , remote_port_(0)
     , received_block_(0)
 {}
@@ -134,7 +134,7 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
     
     ssize_t size = std::distance((char*)&buffer_[0], end); 
     std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + size);
-    ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, port_);
+    ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, initial_port_);
     std::cout << written_bytes << std::endl;
     std::cout << size << std::endl;
     //std::cout << "IAM HERE! writtenBytes:" << written_bytes << std::endl;
