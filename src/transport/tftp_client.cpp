@@ -285,6 +285,16 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
     }
 }
 
+uint8_t TFTPClient::GetHeaderSize()
+{
+    return kHeaderSize; 
+}
+uint16_t TFTPClient::GetDataSize()
+{
+    return kDataSize; 
+}
+
+
 TFTPClient::~TFTPClient()
 {
     //danger zone (check it)

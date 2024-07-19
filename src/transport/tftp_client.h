@@ -32,6 +32,8 @@ public:
     Status Put(const std::string& file_name);
 
     std::string ErrorDescription(Status code);
+    uint8_t GetHeaderSize();
+    uint16_t GetDataSize();
 
     ~TFTPClient();
 
