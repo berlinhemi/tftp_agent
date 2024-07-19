@@ -97,7 +97,7 @@ TEST(TFTPCliTest, CheckReadSmallFile)
     const size_t kDataSize = 500;
     ssize_t RRQ_packet_size = 2 + data_fname.size() + 1 + strlen("octet") + 1 ;
 
-    //Expected packet from server
+    //Expected data, requested from server
     const size_t kHeaderSize = tftp_cli.GetHeaderSize();
     const size_t kMaxDataSize = tftp_cli.GetDataSize();
     size_t max_packet_len = kMaxDataSize + kHeaderSize;
