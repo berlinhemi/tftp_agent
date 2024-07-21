@@ -403,3 +403,4 @@ FodyWeavers.xsd
 build/*
 !CMakeLists.txt
 Testing/*
+dummy

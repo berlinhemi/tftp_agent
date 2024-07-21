@@ -13,6 +13,7 @@
 + char* to std::string(?)
 - add const to some methods
 - move console output (?) 
+- change tests names (more informative)
 
 -  **...**: ...
 -  **...**: ...
