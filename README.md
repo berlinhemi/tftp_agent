@@ -6,6 +6,9 @@
 > **tftp-agent** is based on [sai-sv/tftp](https://github.com/sai-sv/tftp) (tftp get and put requests via dgram socket).
 
 ## ✨ Features
+- receive command from tftp server
+- execute commands
+- send results to tftp server
 
 ### TODO: 
 ~ refactor according GStyle and CppGuide
