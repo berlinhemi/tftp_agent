@@ -29,9 +29,6 @@ public:
         ReadDatagram, (BYTE* data,  size_t max_len,  std::string& host, uint16_t* port),
          //ReadDatagram, (char* data,  size_t max_len,  std::string& host, uint16_t* port),
          (override));
-
-  
-
 };
 
 
@@ -51,55 +48,57 @@ std::vector<BYTE> CreateRequestBuffer(const std::string& fname, TFTPClient::OpCo
     return buf;
 }
 
-//Move tftp_cli to Fixture (?)
 
-TEST(TFTPCliTest, CheckReadRequest)
+//Fixture for TFTPClient
+class TFTPClientTest : public testing::Test {
+    protected:
+        MockUdpSocket mock_socket;
+        TFTPClient* tftp_cli;
+        std::string server_addr = "1.1.1.1";
+        uint16_t port = 69;        
+
+        void SetUp() 
+        { 
+            tftp_cli = new TFTPClient(&mock_socket, server_addr,  port);
+        } 
+
+        void TearDown() 
+        {
+            delete tftp_cli;
+            tftp_cli = nullptr;
+        } 
+};
+
+TEST_F(TFTPClientTest, CheckReadRequest)
 {
-    MockUdpSocket mock_socket;
-    const std::string server_addr = "1.1.1.1";
-    uint16_t port = 69;
-    TFTPClient tftp_cli(&mock_socket, server_addr,  port);
-    
     //ReadRequest packet
     const std::string fname= "dummy";
     std::vector<BYTE> buf = CreateRequestBuffer(fname, TFTPClient::OpCode::RRQ);
     
     EXPECT_CALL(mock_socket, WriteDatagram(buf, server_addr, port));
-    tftp_cli.Get(fname);
-    
+    tftp_cli->Get(fname);
 }
 
-TEST(TFTPCliTest, CheckWriteRequest)
+TEST_F(TFTPClientTest, CheckWriteRequest)
 {
-    MockUdpSocket mock_socket;
-    const std::string server_addr = "1.1.1.1";
-    uint16_t port = 69;
-    TFTPClient tftp_cli(&mock_socket, server_addr,  port);
-
     //WriteRequest packet
     const std::string fname= "dummy";
     std::vector<BYTE> buf = CreateRequestBuffer(fname, TFTPClient::OpCode::WRQ);
   
     EXPECT_CALL(mock_socket, WriteDatagram(buf, server_addr, port));
-    tftp_cli.Put(fname);
-    
+    tftp_cli->Put(fname);
 }
 
-TEST(TFTPCliTest, CheckReadSmallFile)
+TEST_F(TFTPClientTest, CheckReadSmallFile)
 {
-    MockUdpSocket mock_socket;
-    std::string server_addr = "1.1.1.1";
-    uint16_t port = 69;
-    TFTPClient tftp_cli(&mock_socket, server_addr,  port);
-
     //Read request
     const std::string data_fname= "data_500b.txt"; 
     const size_t kDataSize = 500;
     ssize_t RRQ_packet_size = 2 + data_fname.size() + 1 + strlen("octet") + 1 ;
 
     //Expected data, requested from server
-    const size_t kHeaderSize = tftp_cli.GetHeaderSize();
-    const size_t kMaxDataSize = tftp_cli.GetDataSize();
+    const size_t kHeaderSize = tftp_cli->GetHeaderSize();
+    const size_t kMaxDataSize = tftp_cli->GetDataSize();
     size_t max_packet_len = kMaxDataSize + kHeaderSize;
     std::vector<BYTE> reply_packet;
     reply_packet.reserve(max_packet_len);
@@ -127,21 +126,22 @@ TEST(TFTPCliTest, CheckReadSmallFile)
     //Expectations
     {
         InSequence s;
-
+        //Send read request
         EXPECT_CALL(mock_socket, WriteDatagram(_, server_addr, port)).WillOnce(Return(RRQ_packet_size));
-
-        EXPECT_CALL(mock_socket, 
-        ReadDatagram(_, max_packet_len, server_addr, _))
-            .WillOnce(DoAll(
-                SetArrayArgument<0>(&reply_packet[0], &reply_packet[0] + max_packet_len)
-                ,Return(kDataSize + kHeaderSize)
-                ))
-        ;
-
+        //Read data
+        EXPECT_CALL(mock_socket, ReadDatagram(_, max_packet_len, server_addr, _))
+            .WillOnce
+                (DoAll
+                    (
+                    SetArrayArgument<0>(&reply_packet[0], &reply_packet[0] + max_packet_len)
+                    ,Return(kDataSize + kHeaderSize)
+                    )
+                );
+        //Send ACK packet
          EXPECT_CALL(mock_socket, WriteDatagram(ack_packet, server_addr, _)).WillOnce(Return(ack_packet_size));
     }
-    tftp_cli.Get(data_fname);
-    
+
+    tftp_cli->Get(data_fname);
 }
 
 int main(int argc, char** argv)
