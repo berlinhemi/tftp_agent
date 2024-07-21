@@ -16,7 +16,6 @@ using ::testing::InSequence;
 using ::testing::Expectation;
 using ::testing::Pointee;
 
-//class MockUdpSocket: public UdpSocket
 class MockUdpSocket: public UdpSocket
 {
 public:
@@ -142,6 +141,11 @@ TEST_F(TFTPClientTest, CheckReadSmallFile)
     }
 
     tftp_cli->Get(data_fname);
+}
+
+TEST_F(TFTPClientTest, CheckReadBigFile)
+{
+   //...
 }
 
 int main(int argc, char** argv)
