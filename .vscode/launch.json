@@ -8,7 +8,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/src/agent",
-            "args": [],
+            "args": ["192.168.136.129", "get" ,"data"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

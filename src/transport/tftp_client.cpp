@@ -118,23 +118,26 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
         return std::make_pair(Status::kEmptyFilename, 0);
     }
 
-    const std::string mode("octet");
+    //const std::string mode("octet");
+    RequestPacket request(code, file_name, "octet");
+    
 
-    buffer_[0] = 0;
-    buffer_[1] = static_cast<char>(code);
+    //buffer_[0] = 0;
+    //buffer_[1] = static_cast<char>(code);
 
     // filename
-    char *end = strcpy((char*)&buffer_[2], file_name.c_str());
-    end += file_name.size();
-    end++;
+    //char *end = strcpy((char*)&buffer_[2], file_name.c_str());
+    //end += file_name.size();
+    //end++;
     // mode
-    end = std::strcpy(end, mode.c_str());
-    end += mode.size();
-    end++;
+    //end = std::strcpy(end, mode.c_str());
+    //end += mode.size();
+    //end++;
     
-    ssize_t size = std::distance((char*)&buffer_[0], end); 
-    std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + size);
-    ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, initial_port_);
+    //ssize_t size = sizeof(uint16_t) + request.; 
+    std::vector<BYTE> data = request.ToVector();//(buffer_.begin(), buffer_.begin() + size);
+    ssize_t size = data.size();
+    ssize_t written_bytes = socket_->WriteDatagram(&data[0], size, remote_addr_, initial_port_);
     //std::cout << written_bytes << std::endl;
     //std::cout << size << std::endl;
     if (written_bytes != size) {
@@ -146,14 +149,20 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
 
 TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 {
-    const std::size_t data_size = 4;
 
-    buffer_[0] = 0;
-    buffer_[1] = static_cast<BYTE>(OpCode::ACK);
+    AckPacket ack(received_block_);
+    ack.block_id = htons(ack.block_id);
+    ack.opcode = htons(ack.opcode);
+    //received_block_
+
+    const std::size_t data_size = sizeof(ack);
+
+    //buffer_[0] = 0;
+    //buffer_[1] = static_cast<BYTE>(OpCode::ACK);
     //next 2 bytes is containing received block id, do not overwrite them
     
-    std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + data_size);
-    ssize_t bytes_written = socket_->WriteDatagram(data, host, port);
+    //std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + data_size);
+    ssize_t bytes_written = socket_->WriteDatagram((BYTE*)&ack, data_size, host, port);
 
     bool is_success = bytes_written == data_size;
     return std::make_pair(is_success ? Status::kSuccess : Status::kWriteError,
@@ -268,7 +277,7 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
         // DATA
         ssize_t packet_size = kHeaderSize + file.gcount();
         std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + packet_size);
-        ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, remote_port_);
+        ssize_t written_bytes = socket_->WriteDatagram(&data[0], data.size(), remote_addr_, remote_port_);
         if (written_bytes != packet_size) {
             return std::make_pair(Status::kWriteError, total_written_bytes + written_bytes);
         }

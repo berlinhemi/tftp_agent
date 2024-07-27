@@ -121,9 +121,14 @@ ssize_t UdpSocket::ReadDatagram(//std::vector<BYTE>& data,
 }
 
 
-int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data, const std::string& host, uint16_t port)
+int64_t UdpSocket::WriteDatagram(/*const std::vector<BYTE>&*/BYTE* data, size_t data_len, const std::string& host, uint16_t port)
 {
-    if (data.empty() || socket_ < 0) {
+    /*if (data.empty() || socket_ < 0) {
+        return 0;
+    }*/
+
+    if (data == nullptr || data_len <= 0 || socket_ < 0) 
+    {
         return 0;
     }
 
@@ -135,7 +140,8 @@ int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data, const std::strin
     memset(remote_addr.sin_zero, '\0', sizeof(remote_addr.sin_zero));
 
     const ssize_t size = sendto(socket_
-                                ,&data[0], data.size()
+                                //,&data[0], data.size()
+                                 ,data, data_len
                                 ,MSG_DONTWAIT
                                 ,(struct sockaddr*)&remote_addr, sizeof(remote_addr));
 

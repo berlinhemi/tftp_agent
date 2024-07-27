@@ -1,7 +1,11 @@
 #ifndef TFTPCLIENT_H
 #define TFTPCLIENT_H
 
+#include <netinet/in.h>
+
 #include "udp_socket.h"
+#include "tftp_packet.h"
+
 #include <array>
 #include <string>
 
@@ -10,9 +14,7 @@ typedef unsigned char BYTE;
 class TFTPClient
 {
 public:
-     enum class OpCode {
-        RRQ = 1, WRQ, DATA, ACK, ERR, OACK
-    };
+     
     enum class Status {
         kSuccess = 0,
         kInvalidSocket,

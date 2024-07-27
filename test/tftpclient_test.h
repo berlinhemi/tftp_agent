@@ -5,9 +5,9 @@
 #include <fstream>
 #include <filesystem>
 
-#include "tftp_client.h"    
+#include "tftp_client.h" 
+#include "tftp_packet.h"   
 #include "udp_socket.h"
-
 
 using ::testing::_;
 using ::testing::SetArgReferee;
@@ -56,5 +56,5 @@ class TFTPClientTest : public testing::Test {
         } 
 };
 
-std::vector<BYTE> CreateRequestBuffer(const std::string& fname, TFTPClient::OpCode request_code);
+std::vector<BYTE> CreateRequestBuffer(const std::string& fname, /*TFTPClient::*/OpCode request_code);
 //std::ifstream::pos_type GetFileSize(const char* filename);
