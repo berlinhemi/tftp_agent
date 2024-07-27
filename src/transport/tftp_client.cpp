@@ -118,28 +118,12 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
         return std::make_pair(Status::kEmptyFilename, 0);
     }
 
-    //const std::string mode("octet");
     RequestPacket request(code, file_name, "octet");
-    
-
-    //buffer_[0] = 0;
-    //buffer_[1] = static_cast<char>(code);
-
-    // filename
-    //char *end = strcpy((char*)&buffer_[2], file_name.c_str());
-    //end += file_name.size();
-    //end++;
-    // mode
-    //end = std::strcpy(end, mode.c_str());
-    //end += mode.size();
-    //end++;
-    
-    //ssize_t size = sizeof(uint16_t) + request.; 
+  
     std::vector<BYTE> data = request.ToVector();//(buffer_.begin(), buffer_.begin() + size);
     ssize_t size = data.size();
     ssize_t written_bytes = socket_->WriteDatagram(&data[0], size, remote_addr_, initial_port_);
-    //std::cout << written_bytes << std::endl;
-    //std::cout << size << std::endl;
+
     if (written_bytes != size) {
         return std::make_pair(Status::kWriteError, written_bytes);
     }
@@ -151,6 +135,7 @@ TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 {
 
     AckPacket ack(received_block_);
+    MOVE from here
     ack.block_id = htons(ack.block_id);
     ack.opcode = htons(ack.opcode);
     //received_block_
