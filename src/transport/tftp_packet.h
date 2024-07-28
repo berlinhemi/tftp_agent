@@ -14,28 +14,19 @@ struct RequestPacket
     uint16_t opcode;
     std::string fname;
     std::string type;
-    RequestPacket(OpCode opcode,std::string fname,std::string type ):
+    RequestPacket(OpCode opcode, std::string fname, std::string type ):
         opcode((uint16_t)opcode), fname(fname), type(type)
     {}
 
-    std::vector<BYTE> ToVector ()
+    std::vector<BYTE> ToBigEndianVector()
     {
-        size_t offset = 0;
         std::vector<BYTE> data;
-        //data.reserve(sizeof(opcode) + fname.size() + 1 + type.size() + 1);
-        
         data.push_back(0);
         data.push_back(opcode);
-        //offset += 2;
         std::copy(fname.begin(), fname.end(), std::back_inserter(data));
         data.push_back(0);
-        
-        //offset += fname.size();
-        //offset++;
         std::copy(type.begin(), type.end(), std::back_inserter(data));
         data.push_back(0);
-        //std::strcpy((char*)&data[offset], type.c_str());
-
         return data;
     }
 };
@@ -47,6 +38,16 @@ struct AckPacket
     AckPacket(uint16_t block_id):
         block_id(block_id)
     {}
+
+    std::vector<BYTE> ToBigEndianVector()
+    {
+        std::vector<BYTE> data;
+        data.push_back(0);
+        data.push_back(opcode);
+        data.push_back((uint16_t)(block_id >> 8));
+        data.push_back((uint16_t)(block_id & 0x00FF));
+        return data;
+    }
 };
 
 
