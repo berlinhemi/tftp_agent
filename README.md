@@ -17,6 +17,7 @@
 - add const to some methods
 - move console output (?) 
 - change tests names (more informative)
+- uniform puts/cout/printf !
 
 -  **...**: ...
 -  **...**: ...
