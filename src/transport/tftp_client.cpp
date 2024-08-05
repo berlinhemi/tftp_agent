@@ -122,7 +122,7 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
     std::vector<BYTE> request_buffer = request_packet.ToBigEndianVector();
     const ssize_t size = request_buffer.size();
 
-    ssize_t written_bytes = socket_->WriteDatagram(&request_buffer[0], size, remote_addr_, initial_port_);
+    ssize_t written_bytes = socket_->WriteDatagram(request_buffer, remote_addr_, initial_port_);
 
     if (written_bytes != size) {
         return std::make_pair(Status::kWriteError, written_bytes);
@@ -137,7 +137,7 @@ TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
     std::vector<BYTE> ack_buffer = ack_packet.ToBigEndianVector();
     const ssize_t size = ack_buffer.size();
 
-    ssize_t bytes_written = socket_->WriteDatagram(&ack_buffer[0], size, host, port);
+    ssize_t bytes_written = socket_->WriteDatagram(ack_buffer, host, port);
 
     if (bytes_written != size) {
             return std::make_pair(Status::kWriteError, bytes_written);
@@ -147,9 +147,10 @@ TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 
 TFTPClient::Result TFTPClient::Read()
 {
-    std::vector<BYTE> tmp_buffer (buffer_.size());
+    std::vector<BYTE> tmp_buffer;
+    tmp_buffer.reserve(buffer_.size());
     ssize_t received_bytes = 
-        socket_->ReadDatagram(&tmp_buffer[0], tmp_buffer.size(), remote_addr_, &remote_port_);
+        socket_->ReadDatagram(tmp_buffer, remote_addr_, &remote_port_);
     if (received_bytes == -1) {
         std::puts("\nError! No data received.");
         return std::make_pair(Status::kReadError, received_bytes);
@@ -254,7 +255,7 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
         // DATA
         ssize_t packet_size = kHeaderSize + file.gcount();
         std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + packet_size);
-        ssize_t written_bytes = socket_->WriteDatagram(&data[0], data.size(), remote_addr_, remote_port_);
+        ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, remote_port_);
         if (written_bytes != packet_size) {
             return std::make_pair(Status::kWriteError, total_written_bytes + written_bytes);
         }

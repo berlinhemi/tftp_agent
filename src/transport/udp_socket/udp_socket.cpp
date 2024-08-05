@@ -92,10 +92,12 @@ void UdpSocket::Abort()
     }
 }
 
-ssize_t UdpSocket::ReadDatagram(//std::vector<BYTE>& data, 
-    BYTE* data, size_t max_len,  std::string& host, uint16_t* port)
+ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& data, 
+    //BYTE* data, 
+    //size_t max_len, 
+     std::string& host, uint16_t* port)
 {
-    if ( socket_ < 0 || data == nullptr )
+    if ( socket_ < 0 || data.capacity() < 1 )
     {
     //data.size() < max_len) {
         return 0;
@@ -106,7 +108,7 @@ ssize_t UdpSocket::ReadDatagram(//std::vector<BYTE>& data,
     memset(&remote_addr, '\0', sizeof(remote_addr));
 
     const ssize_t size =  recvfrom(socket_
-                                    ,data, max_len
+                                    ,&data[0], data.capacity()
                                     ,MSG_WAITFORONE // blocking operation! Use MSG_DONTWAIT for non blocking
                                     ,(struct sockaddr *)&remote_addr, &remote_addr_len);
     if (size > 0) {
@@ -121,16 +123,16 @@ ssize_t UdpSocket::ReadDatagram(//std::vector<BYTE>& data,
 }
 
 
-int64_t UdpSocket::WriteDatagram(/*const std::vector<BYTE>&*/BYTE* data, size_t data_len, const std::string& host, uint16_t port)
+int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,/*size_t data_len,*/  const std::string& host, uint16_t port)
 {
-    /*if (data.empty() || socket_ < 0) {
-        return 0;
-    }*/
-
-    if (data == nullptr || data_len <= 0 || socket_ < 0) 
-    {
+    if (data.empty() || socket_ < 0) {
         return 0;
     }
+
+    // if (data == nullptr || data_len <= 0 || socket_ < 0) 
+    // {
+    //     return 0;
+    // }
 
     struct sockaddr_in remote_addr;
     
@@ -140,8 +142,8 @@ int64_t UdpSocket::WriteDatagram(/*const std::vector<BYTE>&*/BYTE* data, size_t 
     memset(remote_addr.sin_zero, '\0', sizeof(remote_addr.sin_zero));
 
     const ssize_t size = sendto(socket_
-                                //,&data[0], data.size()
-                                 ,data, data_len
+                                ,&data[0], data.size()
+                                 //,data, data_len
                                 ,MSG_DONTWAIT
                                 ,(struct sockaddr*)&remote_addr, sizeof(remote_addr));
 
