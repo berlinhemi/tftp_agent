@@ -9,8 +9,10 @@ enum class OpCode {
         RRQ = 1, WRQ, DATA, ACK, ERR, OACK
     };
 
-struct RequestPacket
+
+class RequestPacket
 {
+public:
     uint16_t opcode;
     std::string fname;
     std::string type;
@@ -31,8 +33,9 @@ struct RequestPacket
     }
 };
 
-struct AckPacket
+class AckPacket
 {
+public:
     uint16_t opcode = (uint16_t)OpCode::ACK;
     uint16_t block_id;
     AckPacket(uint16_t block_id):
