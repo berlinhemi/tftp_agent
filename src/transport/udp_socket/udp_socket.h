@@ -39,13 +39,16 @@ public:
     void Abort();
 
    // virtual ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
-    virtual ssize_t ReadDatagram( BYTE* buffer,
-        //std::vector<BYTE>& data, 
-        size_t max_len,
+    virtual ssize_t ReadDatagram( //BYTE* buffer,
+        std::vector<BYTE>& data, 
+        //size_t max_len,
         std::string& host,
         uint16_t* port);
         
-    virtual ssize_t WriteDatagram(const std::vector<BYTE>& data,
+    virtual ssize_t WriteDatagram(
+        //const BYTE* data,
+        //size_t data_len,
+        const std::vector<BYTE>& data,
         const std::string& host,
         uint16_t port);
     //irtual ssize_t WriteDatagram(const char *data, size_t len, const char *host, uint16_t port);

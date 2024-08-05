@@ -5,14 +5,14 @@
 #include <fstream>
 #include <filesystem>
 
-#include "tftp_client.h"    
+#include "tftp_client.h" 
+#include "tftp_packet.h"   
 #include "udp_socket.h"
-
 
 using ::testing::_;
 using ::testing::SetArgReferee;
 using ::testing::DoAll;
-using ::testing::SetArrayArgument;
+//using ::testing::SetArgReferee;
 using ::testing::Return;
 using ::testing::InSequence;
 using ::testing::Expectation;
@@ -23,13 +23,20 @@ class MockUdpSocket: public UdpSocket
 public:
 
     MOCK_METHOD(ssize_t, 
-        WriteDatagram, (const std::vector<BYTE>& buf,const std::string& host, uint16_t port), 
+        WriteDatagram, (const std::vector<BYTE>& buf, const std::string& host, uint16_t port), 
         (override));
+    // MOCK_METHOD(ssize_t, 
+    //     WriteDatagram, (const BYTE* data, size_t data_len, const std::string& host, uint16_t port), 
+    //     (override));
 
     MOCK_METHOD(ssize_t,  
-        ReadDatagram, (BYTE* data,  size_t max_len,  std::string& host, uint16_t* port),
+        ReadDatagram, (std::vector<BYTE>& buf,  std::string& host, uint16_t* port),
          //ReadDatagram, (char* data,  size_t max_len,  std::string& host, uint16_t* port),
          (override));
+    // MOCK_METHOD(ssize_t,  
+    //     ReadDatagram, (BYTE* buffer,  size_t max_len,  std::string& host, uint16_t* port),
+    //      //ReadDatagram, (char* data,  size_t max_len,  std::string& host, uint16_t* port),
+    //      (override));  
 };
 
 //Fixture for TFTPClient
@@ -56,5 +63,5 @@ class TFTPClientTest : public testing::Test {
         } 
 };
 
-std::vector<BYTE> CreateRequestBuffer(const std::string& fname, TFTPClient::OpCode request_code);
+std::vector<BYTE> CreateRequestBuffer(const std::string& fname, /*TFTPClient::*/OpCode request_code);
 //std::ifstream::pos_type GetFileSize(const char* filename);
