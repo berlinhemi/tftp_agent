@@ -2,6 +2,8 @@
 #define TFTPPACKET_H
 
 #include <cstring>
+
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -54,9 +56,7 @@ private:
 class RequestPacket
 {
 public:
-    uint16_t opcode;
-    std::string fname;
-    std::string type;
+   
     RequestPacket(OpCode opcode, std::string fname, std::string type ):
         opcode((uint16_t)opcode), fname(fname), type(type)
     {}
@@ -72,13 +72,16 @@ public:
         data.push_back(0);
         return data;
     }
+private:
+    uint16_t opcode;
+    std::string fname;
+    std::string type;
 };
 
 class AckPacket
 {
 public:
-    uint16_t opcode = (uint16_t)OpCode::ACK;
-    uint16_t block_id;
+   
     AckPacket(uint16_t block_id):
         block_id(block_id)
     {}
@@ -92,6 +95,9 @@ public:
         data.push_back((uint16_t)(block_id & 0x00FF));
         return data;
     }
+private:
+    uint16_t opcode = (uint16_t)OpCode::ACK;
+    uint16_t block_id;
 };
 
 

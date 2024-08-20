@@ -12,7 +12,8 @@ file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
 #add_executable(runUnitTests ${TEST_SRC_FILES})
 add_executable(tftp_cli_test tfpclient_test.cpp)
 #message(TEST_SRC_FILES="${TEST_SRC_FILES}")
-target_link_libraries(tftp_cli_test gtest gmock udp_socket tftp_client gtest_main)
+target_link_libraries(tftp_cli_test gtest gmock udp_socket tftp_client )
+# target_link_libraries(tftp_cli_test gtest gmock udp_socket tftp_client ?gtest_main?)
 
 add_test(NAME TFTPCliTest
         COMMAND tftp_cli_test
