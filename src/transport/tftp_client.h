@@ -52,6 +52,7 @@ private:
     Result GetFile(std::fstream& file);
     Result PutFile(std::fstream& file);
 
+    todo: move to std::unique_ptr ?
     UdpSocket* socket_;//change to agregation (?)
     std::string remote_addr_;
     uint16_t initial_port_;
