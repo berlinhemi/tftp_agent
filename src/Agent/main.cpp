@@ -37,7 +37,8 @@ int main(int argc, char **argv)
 
     printf("\nStart TFTP Client %s:%u\n", host.c_str(), port);
 
-    TFTPClient client(host, port);
+    UdpSocket sock;
+    TFTPClient client(&sock, host, port);
 
     const auto begin = std::chrono::steady_clock::now();
     const TFTPClient::Status status = opCode == 1 ? client.Get(filename) : client.Put(filename);

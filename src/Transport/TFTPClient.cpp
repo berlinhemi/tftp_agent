@@ -24,6 +24,7 @@ TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t
     , received_block_id_(0)
 {
     status_ = socket_->IsInitialized() ? Status::kSuccess : Status::kInvalidSocket;
+    buffer_.resize(kHeaderSize + kDataSize);
 }
 
 TFTPClient::Status TFTPClient::Get(const std::string &file_name)
@@ -147,10 +148,10 @@ TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 
 TFTPClient::Result TFTPClient::Read()
 {
-    std::vector<BYTE> tmp_buffer;
-    tmp_buffer.reserve(buffer_.size());
+    //std::vector<BYTE> tmp_buffer;
+    //tmp_buffer.reserve(buffer_.size());
     ssize_t received_bytes = 
-        socket_->ReadDatagram(tmp_buffer, remote_addr_, &remote_port_);
+        socket_->ReadDatagram(/*tmp_buffer*/buffer_, remote_addr_, &remote_port_);
     if (received_bytes == -1) {
         std::puts("\nError! No data received.");
         return std::make_pair(Status::kReadError, received_bytes);
@@ -164,7 +165,7 @@ TFTPClient::Result TFTPClient::Read()
     //     << std::endl;
 
     //copy received datagram to buffer_
-    std::copy_n(tmp_buffer.begin(), received_bytes, buffer_.begin());
+    //std::copy_n(tmp_buffer.begin(), received_bytes, buffer_.begin());
 
     std::cout <<"buffer received:" << (int)buffer_[0] 
         << "," << (int)buffer_[1] 
@@ -172,6 +173,7 @@ TFTPClient::Result TFTPClient::Read()
         << "," << (int)buffer_[3]
         << std::endl;
 
+    //add abstaction ?
     OpCode code = static_cast<OpCode>(buffer_[1]);
     switch (code) {
     case OpCode::DATA:
@@ -247,23 +249,27 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
                 return std::make_pair(Status::kSuccess, total_written_bytes);
             }
             ++current_block_id;
-
-            buffer_[0] = 0;
-            buffer_[1] = static_cast<char>(OpCode::DATA);
-            buffer_[2] = static_cast<uint8_t>(current_block_id >> 8);
-            buffer_[3] = static_cast<uint8_t>(current_block_id & 0x00FF);
-
+      
+            // buffer_[0] = 0;
+            // buffer_[1] = static_cast<char>(OpCode::DATA);
+            // buffer_[2] = static_cast<uint8_t>(current_block_id >> 8);
+            // buffer_[3] = static_cast<uint8_t>(current_block_id & 0x00FF);
+            std::vector<BYTE> payload(kDataSize);
+            file.read((char*)&payload[0], kDataSize);
             // read from file
-            file.read((char*)&buffer_[kHeaderSize], kDataSize);
+            //file.read((char*)&buffer_[kHeaderSize], kDataSize);
             if (file.bad()) {
                 return std::make_pair(Status::kReadFileError, total_written_bytes);
             }
+            DataPacket dataPacket(current_block_id, payload);
+            buffer_ = dataPacket.ToBigEndianVector();
         }
 
         // DATA
         ssize_t packet_size = kHeaderSize + file.gcount();
-        std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + packet_size);
-        ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, remote_port_);
+        //std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + packet_size);
+        //ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, remote_port_);
+        ssize_t written_bytes = socket_->WriteDatagram(buffer_, remote_addr_, remote_port_);
         if (written_bytes != packet_size) {
             return std::make_pair(Status::kWriteError, total_written_bytes + written_bytes);
         }

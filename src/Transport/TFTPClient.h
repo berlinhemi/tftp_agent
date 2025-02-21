@@ -57,8 +57,8 @@ private:
     uint16_t initial_port_;
     uint16_t remote_port_; //tftp server changes port after first connection
     //todo: delete buffer_ ?
-    //std::vector<BYTE> buffer_;
-    std::array<BYTE, kHeaderSize + kDataSize> buffer_;
+    std::vector<BYTE> buffer_;
+    //std::array<BYTE, kHeaderSize + kDataSize> buffer_;
     uint16_t received_block_id_;
     Status status_;
 };
