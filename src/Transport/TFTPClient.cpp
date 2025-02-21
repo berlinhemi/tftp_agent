@@ -5,25 +5,26 @@
 #include <fstream>
 #include <iostream>
 
-TFTPClient::TFTPClient(const std::string &server_addr, uint16_t port)
-    : remote_addr_(server_addr)
-    , initial_port_(port)
-    , remote_port_(0)
-    , received_block_(0)
-{
-    socket_ = new UdpSocket();
-    status_ = socket_->Init() ? Status::kSuccess : Status::kInvalidSocket;
-}
+// TFTPClient::TFTPClient(const std::string &server_addr, uint16_t port)
+//     : remote_addr_(server_addr)
+//     , initial_port_(port)
+//     , remote_port_(0)
+//     , received_block_id_(0)
+// {
+//     socket_ = new UdpSocket();
+//     status_ = socket_->Init() ? Status::kSuccess : Status::kInvalidSocket;
+// }
 
 TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t port)
     : socket_(sock)
-    //Not good (for tests only)
     , status_(Status::kSuccess)
     , remote_addr_(server_addr)
     , initial_port_(port)
     , remote_port_(0)
-    , received_block_(0)
-{}
+    , received_block_id_(0)
+{
+    status_ = socket_->IsInitialized() ? Status::kSuccess : Status::kInvalidSocket;
+}
 
 TFTPClient::Status TFTPClient::Get(const std::string &file_name)
 {
@@ -42,7 +43,7 @@ TFTPClient::Status TFTPClient::Get(const std::string &file_name)
     if (result.first != Status::kSuccess) {
         return result.first;
     }
-    received_block_ = 0;
+    received_block_id_ = 0;
 
     // FILE
     result = this->GetFile(file);
@@ -70,7 +71,7 @@ TFTPClient::Status TFTPClient::Put(const std::string &file_name)
         return result.first;
     }
 
-    received_block_ = 0;
+    received_block_id_ = 0;
 
     // ACK
     result = this->Read();
@@ -132,8 +133,7 @@ TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode 
 
 TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 {
-
-    AckPacket ack_packet(received_block_);
+    AckPacket ack_packet(received_block_id_);
     std::vector<BYTE> ack_buffer = ack_packet.ToBigEndianVector();
     const ssize_t size = ack_buffer.size();
 
@@ -175,11 +175,11 @@ TFTPClient::Result TFTPClient::Read()
     OpCode code = static_cast<OpCode>(buffer_[1]);
     switch (code) {
     case OpCode::DATA:
-        received_block_ = ((uint8_t)buffer_[2] << 8) | (uint8_t)buffer_[3];
+        received_block_id_ = ((uint8_t)buffer_[2] << 8) | (uint8_t)buffer_[3];
         return std::make_pair(Status::kSuccess, received_bytes - kHeaderSize);
     case OpCode::ACK:
-        received_block_ = ((uint8_t)buffer_[2] << 8) | (uint8_t)buffer_[3];
-        return std::make_pair(Status::kSuccess, received_block_);
+        received_block_id_ = ((uint8_t)buffer_[2] << 8) | (uint8_t)buffer_[3];
+        return std::make_pair(Status::kSuccess, received_block_id_);
     case OpCode::ERR:
         printf("\nError! Message from remote host: %s", &buffer_[4]);
         return std::make_pair(Status::kReadError, received_bytes);
@@ -205,10 +205,10 @@ TFTPClient::Result TFTPClient::GetFile(std::fstream &file)
         }
         receivedDataBytes = result.second;
         std::cout << "receivedDataBytes:" << receivedDataBytes << std::endl;
-         std::cout << "received_block_:" << received_block_ << std::endl;
+         std::cout << "received_block_id_:" << received_block_id_ << std::endl;
         
         // write to file
-        if ((receivedDataBytes > 0) && (received_block_ > totalReceivedBlocks)) {
+        if ((receivedDataBytes > 0) && (received_block_id_ > totalReceivedBlocks)) {
             ++totalReceivedBlocks;
             totalReceivedDataBytes += receivedDataBytes;
 
@@ -238,20 +238,20 @@ TFTPClient::Result TFTPClient::GetFile(std::fstream &file)
 TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
 {
     Result result;
-    uint16_t current_block = 0;
+    uint16_t current_block_id = 0;
     unsigned long total_written_bytes = 0;
 
     while (true) {
-        if (current_block == received_block_) {
+        if (current_block_id == received_block_id_) {
             if (file.eof()) {
                 return std::make_pair(Status::kSuccess, total_written_bytes);
             }
-            ++current_block;
+            ++current_block_id;
 
             buffer_[0] = 0;
             buffer_[1] = static_cast<char>(OpCode::DATA);
-            buffer_[2] = static_cast<uint8_t>(current_block >> 8);
-            buffer_[3] = static_cast<uint8_t>(current_block & 0x00FF);
+            buffer_[2] = static_cast<uint8_t>(current_block_id >> 8);
+            buffer_[3] = static_cast<uint8_t>(current_block_id & 0x00FF);
 
             // read from file
             file.read((char*)&buffer_[kHeaderSize], kDataSize);
@@ -276,7 +276,7 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
 
         total_written_bytes += file.gcount();
 
-        printf("\r%lu bytes (%i blocks) written", total_written_bytes, current_block);
+        printf("\r%lu bytes (%i blocks) written", total_written_bytes, current_block_id);
     }
 }
 

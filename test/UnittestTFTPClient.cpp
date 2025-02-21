@@ -64,32 +64,30 @@ class TFTPClientTest : public testing::Test {
 };
 
 
-
-
-
-TEST_F(TFTPClientTest, CheckReadRequest)
+TEST_F(TFTPClientTest, ReadRequestSuccess)
 {
     //ReadRequest packet
     const std::string fname= "dummy";
     std::vector<BYTE> buf = CreateRequestBuffer(fname, OpCode::RRQ);
     
     EXPECT_CALL(mock_socket_, WriteDatagram(buf, server_addr_, port_));
+    //Call method
     tftp_cli_->Get(fname);
 }
 
-TEST_F(TFTPClientTest, CheckWriteRequest)
+TEST_F(TFTPClientTest, WriteRequestSuccess)
 {
     //WriteRequest packet
     const std::string fname= "dummy";
     std::vector<BYTE> buf = CreateRequestBuffer(fname, OpCode::WRQ);
   
     EXPECT_CALL(mock_socket_, WriteDatagram(buf, server_addr_, port_));
+    //Call method
     tftp_cli_->Put(fname);
 }
 
-TEST_F(TFTPClientTest, CheckReadSmallFile)
+TEST_F(TFTPClientTest, GetSmallFileSuccess)
 {
-
     //Read request size 
     const std::string data_fname= "test_data/data_500b.txt"; 
     ASSERT_TRUE(std::filesystem::exists(data_fname));
@@ -98,16 +96,16 @@ TEST_F(TFTPClientTest, CheckReadSmallFile)
     ASSERT_LE(kDataSize, kMaxDataSize_);
     ssize_t RRQ_packet_size = 2 + data_fname.size() + 1 + strlen("octet") + 1 ;
 
-    //Expected bytes, requested from server
+    //Expected reply from server
     size_t max_packet_len = kMaxDataSize_ + kHeaderSize_;
     std::vector<BYTE> reply_packet;
     reply_packet.reserve(max_packet_len);
-    //1)Header
+    //  Expected header
     reply_packet.push_back(0);
     reply_packet.push_back((BYTE)OpCode::DATA);
     reply_packet.push_back(0); //block id major byte
     reply_packet.push_back(1); //block id minor byte
-    //2)Data
+    //  Expected data
     std::fstream data_file(data_fname, std::ios_base::in | std::ios_base::binary);
     ASSERT_TRUE(data_file);
     reply_packet.insert(reply_packet.begin() + kHeaderSize_,
@@ -115,35 +113,29 @@ TEST_F(TFTPClientTest, CheckReadSmallFile)
                std::istream_iterator<BYTE>());
    
     //ACK packet
-    AckPacket ack(1);
+    uint16_t block_id = 1;
+    AckPacket ack(block_id);
     std::vector<BYTE> ack_packet = ack.ToBigEndianVector();
-    //const size_t ack_packet_size = ack_packet.;
-    // ack_packet.reserve(ack_packet_size);
-    // ack_packet.push_back(0);
-    // ack_packet.push_back((BYTE)OpCode::ACK);
-    // ack_packet.push_back(0); 
-    // ack_packet.push_back(1); 
 
     //Expectations
     {
         InSequence s;
-        //Send read request (detect size only)
+        //Send read request
         EXPECT_CALL(mock_socket_, WriteDatagram(_, server_addr_, port_)).WillOnce(Return(RRQ_packet_size));
         //Read data
         EXPECT_CALL(mock_socket_, ReadDatagram(_, server_addr_, _))
             .WillOnce
                 (DoAll
                     (
-                    //argument <0> - container for receiving data
                     SetArgReferee<0>(reply_packet)
                     //SetArrayArgument<0>(&reply_packet[0], &reply_packet[0] + max_packet_len)
                     ,Return(kDataSize + kHeaderSize_)
                     )
                 );
-        //Send ACK packet
+        //Send ACK packet (server port will be changed)
          EXPECT_CALL(mock_socket_, WriteDatagram(ack_packet, server_addr_, _)).WillOnce(Return(ack_packet.size()));
     }
-
+    //Call method
     tftp_cli_->Get(data_fname);
 }
 

@@ -27,7 +27,7 @@ public:
         kReadFileError
     };
 
-    TFTPClient(const std::string& server_addr, uint16_t port);
+    //TFTPClient(const std::string& server_addr, uint16_t port);
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
     Status Get(const std::string& file_name);
@@ -52,14 +52,14 @@ private:
     Result GetFile(std::fstream& file);
     Result PutFile(std::fstream& file);
 
-    //todo: move to std::unique_ptr ?
-    UdpSocket* socket_;//change to agregation (?)
+    UdpSocket* socket_;
     std::string remote_addr_;
     uint16_t initial_port_;
     uint16_t remote_port_; //tftp server changes port after first connection
-   //todo: delete buffer_ ?
+    //todo: delete buffer_ ?
+    //std::vector<BYTE> buffer_;
     std::array<BYTE, kHeaderSize + kDataSize> buffer_;
-    uint16_t received_block_;
+    uint16_t received_block_id_;
     Status status_;
 };
 
