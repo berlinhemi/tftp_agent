@@ -1,10 +1,10 @@
 #ifndef TFTPCLIENT_H
 #define TFTPCLIENT_H
 
-#include <netinet/in.h>
+#include "UDPSocket/UDPSocket.h"
+#include "TFTPPacket.h"
 
-#include "udp_socket.h"
-#include "tftp_packet.h"
+#include <netinet/in.h>
 
 #include <array>
 #include <string>
@@ -52,12 +52,12 @@ private:
     Result GetFile(std::fstream& file);
     Result PutFile(std::fstream& file);
 
-    todo: move to std::unique_ptr ?
+    //todo: move to std::unique_ptr ?
     UdpSocket* socket_;//change to agregation (?)
     std::string remote_addr_;
     uint16_t initial_port_;
     uint16_t remote_port_; //tftp server changes port after first connection
-    todo: delete buffer_ ?
+   //todo: delete buffer_ ?
     std::array<BYTE, kHeaderSize + kDataSize> buffer_;
     uint16_t received_block_;
     Status status_;

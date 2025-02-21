@@ -1,4 +1,4 @@
-#include "tftp_client.h"
+#include "TFTPClient.h"
 
 #include <algorithm>
 #include <cstring>
@@ -155,14 +155,22 @@ TFTPClient::Result TFTPClient::Read()
         std::puts("\nError! No data received.");
         return std::make_pair(Status::kReadError, received_bytes);
     }
-    // std::cout <<"buffer received:" << tmp_buffer[0] 
-    //     << "," << tmp_buffer[1] 
-    //     << "," << tmp_buffer[2]
-    //     << "," << tmp_buffer[3]
+    // std::cout <<"tmp_buffer received:" << (int)tmp_buffer[0] 
+    //     << "," << (int)tmp_buffer[1] 
+    //     << "," << (int)tmp_buffer[2]
+    //     << "," << (int)tmp_buffer[3]
+    //     << std::endl
+    //     << "received_bytes:" << received_bytes 
     //     << std::endl;
 
     //copy received datagram to buffer_
-    std::copy_n(tmp_buffer.begin(), tmp_buffer.size(), buffer_.begin());
+    std::copy_n(tmp_buffer.begin(), received_bytes, buffer_.begin());
+
+    std::cout <<"buffer received:" << (int)buffer_[0] 
+        << "," << (int)buffer_[1] 
+        << "," << (int)buffer_[2]
+        << "," << (int)buffer_[3]
+        << std::endl;
 
     OpCode code = static_cast<OpCode>(buffer_[1]);
     switch (code) {

@@ -1,29 +1,70 @@
-#include "tftpclient_test.h"
-#include "tftp_packet.h"
+#include "TFTPClient.h"
+#include "mock/MockUdpSocket.h"
 
+#include <cstring>
+#include <fstream>
+#include <filesystem>
+#include <memory>
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+
+using ::testing::_;
+using ::testing::SetArgReferee;
+using ::testing::DoAll;
+//using ::testing::SetArgReferee;
+using ::testing::Return;
+using ::testing::InSequence;
+using ::testing::Expectation;
+using ::testing::Pointee;
 
 // std::ifstream::pos_type GetFileSize(const char* filename)
 // {
 //     std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
 //     return in.tellg();
 // }
+//Fixture for TFTPClient
+class TFTPClientTest : public testing::Test {
+    protected:
+        MockUdpSocket mock_socket_;
+        std::unique_ptr<TFTPClient> tftp_cli_;
+        std::string server_addr_ = "1.1.1.1";
+        uint16_t port_ = 69;    
+        size_t kHeaderSize_;
+        size_t kMaxDataSize_;
 
-std::vector<BYTE> CreateRequestBuffer(const std::string& fname, OpCode request_code)
-{
-    RequestPacket req_packet(request_code, fname, "octet");
-    std::vector<BYTE> buf = req_packet.ToBigEndianVector();
-    // opcode (RRQ/WRQ)
-    // buf.push_back(0);
-    // buf.push_back(static_cast<char>(request_code));
-    // // filename
-    // buf.insert(buf.end(), fname.begin(), fname.end());
-    // buf.push_back(0);
-    // // mode (octet/ascii)
-    // std::string mode("octet");
-    // buf.insert(buf.end(), mode.begin(), mode.end());
-    // buf.push_back(0);
-    return buf;
-}
+        void SetUp() 
+        { 
+            tftp_cli_ = std::make_unique<TFTPClient>(&mock_socket_, server_addr_,  port_);
+            kHeaderSize_ = tftp_cli_->GetHeaderSize();
+            kMaxDataSize_ = tftp_cli_->GetDataSize();  
+        } 
+
+        void TearDown() 
+        {} 
+
+        // Helper func
+        std::vector<BYTE> CreateRequestBuffer(const std::string& fname, OpCode request_code)
+        {
+            RequestPacket req_packet(request_code, fname, "octet");
+            std::vector<BYTE> buf = req_packet.ToBigEndianVector();
+            // opcode (RRQ/WRQ)
+            // buf.push_back(0);
+            // buf.push_back(static_cast<char>(request_code));
+            // // filename
+            // buf.insert(buf.end(), fname.begin(), fname.end());
+            // buf.push_back(0);
+            // // mode (octet/ascii)
+            // std::string mode("octet");
+            // buf.insert(buf.end(), mode.begin(), mode.end());
+            // buf.push_back(0);
+            return buf;
+        }
+};
+
+
+
 
 
 TEST_F(TFTPClientTest, CheckReadRequest)
@@ -115,10 +156,8 @@ TEST_F(TFTPClientTest, CheckRead5KBFile)
     ASSERT_GT(kDataSize, 0);
     ssize_t RRQ_packet_size = 2 + data_fname.size() + 1 + strlen("octet") + 1 ;
 
-    
+   
 }
-
-
 
 
 int main(int argc, char** argv)
