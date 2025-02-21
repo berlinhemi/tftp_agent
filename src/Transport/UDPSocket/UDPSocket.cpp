@@ -9,11 +9,14 @@
 
 #include <cstring> // memset
 
-
-
-UdpSocket::~UdpSocket()
+UdpSocket::UdpSocket()
 {
-    Abort();
+    initialized_ = Init();
+}
+
+bool UdpSocket::IsInitialized()
+{
+    return initialized_;
 }
 
 bool UdpSocket::Init()
@@ -26,7 +29,7 @@ bool UdpSocket::Init()
 
     // read/write timeout
     struct timeval timeout;
-    timeout.tv_sec = 2;
+    timeout.tv_sec = 3;
     timeout.tv_usec = 0;
 
     if (setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
@@ -150,6 +153,11 @@ int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,/*size_t data_len
     return size;
 }
 
+
+UdpSocket::~UdpSocket()
+{
+    Abort();
+}
 // const char* UdpSocket::LocalAddress() const
 // {
 //     return address_;

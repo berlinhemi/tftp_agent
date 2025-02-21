@@ -30,13 +30,10 @@ typedef unsigned char BYTE;
 class UdpSocket
 {
 public:
-    UdpSocket() = default;
-    ~UdpSocket();
-
-    bool Init();
+    UdpSocket();
     //bool Bind(const char *local_address, uint16_t local_port);
     //bool Bind(uint16_t local_port);
-    void Abort();
+    bool IsInitialized();
 
    // virtual ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
     virtual ssize_t ReadDatagram( //BYTE* buffer,
@@ -55,12 +52,16 @@ public:
 
     //const char *LocalAddress() const;
     //uint16_t LocalPort() const;
+    ~UdpSocket();
 
 private:
     //max: 4 octets (4*3) + 3 dots 
     //char address_[15];
     //uint16_t port_;
     int socket_ {-1};
+    bool initialized_ {false};
+    bool Init();
+    void Abort();
 };
 
 #endif // UDP_SOCKET_H
