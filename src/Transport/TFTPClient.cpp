@@ -17,7 +17,6 @@
 
 TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t port)
     : socket_(sock)
-    , status_(Status::kSuccess)
     , remote_addr_(server_addr)
     , initial_port_(port)
     , remote_port_(0)
@@ -33,7 +32,8 @@ TFTPClient::Status TFTPClient::Get(const std::string &file_name)
         return status_;
     }
 
-    std::fstream file(file_name.c_str(), std::ios_base::out | std::ios_base::binary);
+    std::string out_fname = file_name + ".received";
+    std::fstream file(out_fname.c_str(), std::ios_base::out | std::ios_base::binary);
     if (!file) {
         std::puts("\nError! Cant't opening file for writing!");
         return Status::kOpenFileError;
@@ -148,10 +148,9 @@ TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
 
 TFTPClient::Result TFTPClient::Read()
 {
-    //std::vector<BYTE> tmp_buffer;
-    //tmp_buffer.reserve(buffer_.size());
+    
     ssize_t received_bytes = 
-        socket_->ReadDatagram(/*tmp_buffer*/buffer_, remote_addr_, &remote_port_);
+        socket_->ReadDatagram(buffer_, remote_addr_, &remote_port_);
     if (received_bytes == -1) {
         std::puts("\nError! No data received.");
         return std::make_pair(Status::kReadError, received_bytes);
@@ -244,44 +243,35 @@ TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
     unsigned long total_written_bytes = 0;
 
     while (true) {
+        //can be false?
         if (current_block_id == received_block_id_) {
             if (file.eof()) {
                 return std::make_pair(Status::kSuccess, total_written_bytes);
             }
             ++current_block_id;
       
-            // buffer_[0] = 0;
-            // buffer_[1] = static_cast<char>(OpCode::DATA);
-            // buffer_[2] = static_cast<uint8_t>(current_block_id >> 8);
-            // buffer_[3] = static_cast<uint8_t>(current_block_id & 0x00FF);
             std::vector<BYTE> payload(kDataSize);
             file.read((char*)&payload[0], kDataSize);
-            // read from file
-            //file.read((char*)&buffer_[kHeaderSize], kDataSize);
             if (file.bad()) {
                 return std::make_pair(Status::kReadFileError, total_written_bytes);
             }
-            DataPacket dataPacket(current_block_id, payload);
-            buffer_ = dataPacket.ToBigEndianVector();
-        }
 
-        // DATA
-        ssize_t packet_size = kHeaderSize + file.gcount();
-        //std::vector<BYTE> data (buffer_.begin(), buffer_.begin() + packet_size);
-        //ssize_t written_bytes = socket_->WriteDatagram(data, remote_addr_, remote_port_);
-        ssize_t written_bytes = socket_->WriteDatagram(buffer_, remote_addr_, remote_port_);
-        if (written_bytes != packet_size) {
-            return std::make_pair(Status::kWriteError, total_written_bytes + written_bytes);
+            buffer_ = DataPacket(current_block_id, payload).ToBigEndianVector();
         }
-
+        ssize_t written_bytes = file.gcount();
+        // Send DATA
+        ssize_t packet_size = kHeaderSize + written_bytes;
+        ssize_t sent_bytes = socket_->WriteDatagram(buffer_, remote_addr_, remote_port_);
+        if (sent_bytes != packet_size) {
+            return std::make_pair(Status::kWriteError, total_written_bytes + sent_bytes);
+        }
         // ACK
         result = this->Read();
         if (result.first != Status::kSuccess) {
             return std::make_pair(result.first, total_written_bytes + packet_size);
         }
 
-        total_written_bytes += file.gcount();
-
+        total_written_bytes += written_bytes;
         printf("\r%lu bytes (%i blocks) written", total_written_bytes, current_block_id);
     }
 }
@@ -290,16 +280,16 @@ uint8_t TFTPClient::GetHeaderSize()
 {
     return kHeaderSize; 
 }
+
 uint16_t TFTPClient::GetDataSize()
 {
     return kDataSize; 
 }
 
-
-TFTPClient::~TFTPClient()
-{
-    //danger zone (check it)
-    //delete socket_;
-    //socket_ = nullptr;
-}
+// TFTPClient::~TFTPClient()
+// {
+//     //danger zone (check it)
+//     //delete socket_;
+//     //socket_ = nullptr;
+// }
 

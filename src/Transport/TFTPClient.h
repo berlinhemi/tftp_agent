@@ -37,7 +37,7 @@ public:
     uint8_t GetHeaderSize();
     uint16_t GetDataSize();
 
-    ~TFTPClient();
+    ~TFTPClient() = default;
 
 private:
     static const uint8_t kHeaderSize = 4;
