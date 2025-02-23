@@ -16,8 +16,8 @@ class DataPacket
 public:
     const static uint16_t kMaxSize = 516;
     
-    // DataPacket()
-    // {}
+    DataPacket()
+    {}
 
     DataPacket(uint16_t block_id, const std::vector<BYTE>& buffer ):
         block_id(block_id)
@@ -81,7 +81,9 @@ private:
 class AckPacket
 {
 public:
-   
+    AckPacket()
+    {}
+
     AckPacket(uint16_t block_id):
         block_id(block_id)
     {}
