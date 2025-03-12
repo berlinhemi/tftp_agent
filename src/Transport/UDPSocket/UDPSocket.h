@@ -58,8 +58,8 @@ private:
     //max: 4 octets (4*3) + 3 dots 
     //char address_[15];
     //uint16_t port_;
-    int socket_ {-1};
-    bool initialized_ {false};
+    int m_socket {-1};
+    bool m_initialized {false};
     bool Init();
     void Abort();
 };

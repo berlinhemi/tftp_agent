@@ -2,7 +2,7 @@
 #define TFTPCLIENT_H
 
 #include "UDPSocket/UDPSocket.h"
-#include "TFTPPacket.h"
+#include "TFTPPacketTypes.h"
 
 #include <netinet/in.h>
 
@@ -52,15 +52,15 @@ private:
     Result GetFile(std::fstream& file);
     Result PutFile(std::fstream& file);
 
-    UdpSocket* socket_;
-    std::string remote_addr_;
-    uint16_t initial_port_;
-    uint16_t remote_port_; //tftp server changes port after first connection
+    UdpSocket* m_socket;
+    std::string m_remote_addr;
+    uint16_t m_initial_port;
+    uint16_t m_remote_port; //tftp server changes port after first connection
     //todo: delete buffer_ ?
-    std::vector<BYTE> buffer_;
+    std::vector<BYTE> m_buffer;
     //std::array<BYTE, kHeaderSize + kDataSize> buffer_;
-    uint16_t received_block_id_;
-    Status status_;
+    uint16_t m_received_block_id;
+    Status m_status;
 };
 
 #endif // TFTPCLIENT_H

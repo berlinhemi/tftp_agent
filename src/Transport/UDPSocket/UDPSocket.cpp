@@ -11,19 +11,19 @@
 
 UdpSocket::UdpSocket()
 {
-    initialized_ = Init();
+    m_initialized = Init();
 }
 
 bool UdpSocket::IsInitialized()
 {
-    return initialized_;
+    return m_initialized;
 }
 
 bool UdpSocket::Init()
 {
     // Creating socket file descriptor
-    socket_ = socket(AF_INET, SOCK_DGRAM, 0);
-    if (socket_ == -1) {
+    m_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (m_socket == -1) {
         return false; // socket creation failed
     }
 
@@ -32,7 +32,7 @@ bool UdpSocket::Init()
     timeout.tv_sec = 3;
     timeout.tv_usec = 0;
 
-    if (setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+    if (setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
         return false;
     }
    
@@ -57,7 +57,7 @@ bool UdpSocket::Init()
 //     }
 
 //     int broadcast = 1;
-//     int result = setsockopt(socket_, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
+//     int result = setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
 //     if (result != 0) {
 //         return false;
 //     }
@@ -72,9 +72,9 @@ bool UdpSocket::Init()
 //     localAddr.sin_port = htons(port_);
 
 //     // Bind the socket with the server address
-//     result = bind(socket_, (const struct sockaddr *)&localAddr, sizeof(localAddr));
+//     result = bind(m_socket, (const struct sockaddr *)&localAddr, sizeof(localAddr));
 //     if (result != 0) { // bind failed
-//         close(socket_);
+//         close(m_socket);
 //         return false;
 //     }
 
@@ -88,10 +88,10 @@ bool UdpSocket::Init()
 
 void UdpSocket::Abort()
 {
-    if (socket_ != -1) {
-        shutdown(socket_, 2);
-        close(socket_);
-        socket_ = -1;
+    if (m_socket != -1) {
+        shutdown(m_socket, 2);
+        close(m_socket);
+        m_socket = -1;
     }
 }
 
@@ -100,7 +100,7 @@ ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& data,
     //size_t max_len, 
      std::string& host, uint16_t* port)
 {
-    if ( socket_ < 0 || data.capacity() < 1 )
+    if ( m_socket < 0 || data.capacity() < 1 )
     {
     //data.size() < max_len) {
         return 0;
@@ -110,7 +110,7 @@ ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& data,
     socklen_t remote_addr_len = sizeof(struct sockaddr_in);
     memset(&remote_addr, '\0', sizeof(remote_addr));
 
-    const ssize_t size =  recvfrom(socket_
+    const ssize_t size =  recvfrom(m_socket
                                     ,&data[0], data.capacity()
                                     ,MSG_WAITFORONE // blocking operation! Use MSG_DONTWAIT for non blocking
                                     ,(struct sockaddr *)&remote_addr, &remote_addr_len);
@@ -128,11 +128,11 @@ ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& data,
 
 int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,/*size_t data_len,*/  const std::string& host, uint16_t port)
 {
-    if (data.empty() || socket_ < 0) {
+    if (data.empty() || m_socket < 0) {
         return 0;
     }
 
-    // if (data == nullptr || data_len <= 0 || socket_ < 0) 
+    // if (data == nullptr || data_len <= 0 || m_socket < 0) 
     // {
     //     return 0;
     // }
@@ -144,7 +144,7 @@ int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,/*size_t data_len
     remote_addr.sin_port = htons(port);
     memset(remote_addr.sin_zero, '\0', sizeof(remote_addr.sin_zero));
 
-    const ssize_t size = sendto(socket_
+    const ssize_t size = sendto(m_socket
                                 ,&data[0], data.size()
                                  //,data, data_len
                                 ,MSG_DONTWAIT

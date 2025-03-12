@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+typedef unsigned char BYTE;
+
 enum class OpCode {
         RRQ = 1, WRQ, DATA, ACK, ERR, OACK
     };
@@ -14,13 +16,11 @@ enum class OpCode {
 class DataPacket
 {
 public:
-    const static uint16_t kMaxSize = 516;
+    //const static uint16_t kMaxSize = 516;
     
-    DataPacket()
-    {}
+    DataPacket() = default;
 
-    DataPacket(uint16_t block_id, const std::vector<BYTE>& buffer ):
-        block_id(block_id)
+    DataPacket(uint16_t block_id, const std::vector<BYTE>& buffer ): block_id(block_id)
     {
         if(buffer.size() > kMaxDataSize)
         {
@@ -39,7 +39,7 @@ public:
     {
         std::vector<BYTE> buffer;
         buffer.push_back(0);
-        buffer.push_back(opcode);
+        buffer.push_back(m_opcode);
         buffer.push_back((uint16_t)(block_id >> 8));
         buffer.push_back((uint16_t)(block_id & 0x00FF));
         std::copy(data.begin(), data.end(), std::back_inserter(data));
@@ -48,7 +48,7 @@ public:
 private:
     static const uint16_t kMaxDataSize = 512;
     static const uint16_t kHeaderSize = 4;
-    uint16_t opcode = (uint16_t)OpCode::DATA;
+    static const uint16_t m_opcode = (uint16_t)OpCode::DATA;
     uint16_t block_id;
     std::vector<BYTE> data;
 };
@@ -57,49 +57,49 @@ class RequestPacket
 {
 public:
    
-    RequestPacket(OpCode opcode, std::string fname, std::string type ):
-        opcode((uint16_t)opcode), fname(fname), type(type)
+    RequestPacket(OpCode opcode, std::string fname, std::string type ) :
+        m_opcode((uint16_t)opcode),
+        m_fname(fname),
+        m_type(type)
     {}
 
     std::vector<BYTE> ToBigEndianVector()
     {
         std::vector<BYTE> data;
         data.push_back(0);
-        data.push_back(opcode);
-        std::copy(fname.begin(), fname.end(), std::back_inserter(data));
+        data.push_back(m_opcode);
+        std::copy(m_fname.begin(), m_fname.end(), std::back_inserter(data));
         data.push_back(0);
-        std::copy(type.begin(), type.end(), std::back_inserter(data));
+        std::copy(m_type.begin(), m_type.end(), std::back_inserter(data));
         data.push_back(0);
         return data;
     }
 private:
-    uint16_t opcode;
-    std::string fname;
-    std::string type;
+    uint16_t m_opcode;
+    std::string m_fname;
+    std::string m_type;
 };
 
 class AckPacket
 {
 public:
-    AckPacket()
-    {}
+    AckPacket() = default;
 
-    AckPacket(uint16_t block_id):
-        block_id(block_id)
+    AckPacket(uint16_t block_id) : m_block_id(block_id)
     {}
 
     std::vector<BYTE> ToBigEndianVector()
     {
         std::vector<BYTE> data;
         data.push_back(0);
-        data.push_back(opcode);
-        data.push_back((uint16_t)(block_id >> 8));
-        data.push_back((uint16_t)(block_id & 0x00FF));
+        data.push_back(m_opcode);
+        data.push_back((uint16_t)(m_block_id >> 8));
+        data.push_back((uint16_t)(m_block_id & 0x00FF));
         return data;
     }
 private:
-    uint16_t opcode = (uint16_t)OpCode::ACK;
-    uint16_t block_id;
+    static const uint16_t m_opcode = (uint16_t)OpCode::ACK;
+    uint16_t m_block_id;
 };
 
 

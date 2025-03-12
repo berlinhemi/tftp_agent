@@ -19,6 +19,7 @@
 - change tests names (more informative)
 - uniform puts/cout/printf !
 - put gtest to third party dir
+- split TFTPPacket.h to multiply packets
 
 -  **...**: ...
 -  **...**: ...

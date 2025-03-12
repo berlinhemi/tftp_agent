@@ -1,5 +1,5 @@
 #include "TFTPClient.h"
-#include "TFTPPacket.h"
+#include "TFTPPacketTypes.h"
 #include "mock/MockUdpSocket.h"
 
 #include <cstring>
@@ -19,6 +19,7 @@ using ::testing::Return;
 using ::testing::InSequence;
 using ::testing::Expectation;
 using ::testing::Pointee;
+using ::testing::Invoke;
 
 // std::ifstream::pos_type GetFileSize(const char* filename)
 // {
@@ -45,7 +46,9 @@ class TFTPClientTest : public testing::Test {
         void TearDown() 
         {} 
 
-        // Helper to create reply packet
+        /*
+            @brief Helper to create reply packet
+        */ 
         std::vector<BYTE> ReadAllBinaryData(const std::string& fname)
         {
             std::ifstream fin(fname, std::ios::in | std::ios::binary);
@@ -77,16 +80,6 @@ class TFTPClientTest : public testing::Test {
         {
             RequestPacket req_packet(request_code, fname, "octet");
             std::vector<BYTE> buf = req_packet.ToBigEndianVector();
-            // opcode (RRQ/WRQ)
-            // buf.push_back(0);
-            // buf.push_back(static_cast<char>(request_code));
-            // // filename
-            // buf.insert(buf.end(), fname.begin(), fname.end());
-            // buf.push_back(0);
-            // // mode (octet/ascii)
-            // std::string mode("octet");
-            // buf.insert(buf.end(), mode.begin(), mode.end());
-            // buf.push_back(0);
             return buf;
         }
 };
@@ -205,20 +198,12 @@ TEST_F(TFTPClientTest, GetFile2000BytesSuccess)
     
 
     //ACK
-    for(int i = 0; i < 4; i++)
+    for(uint16_t packet_id = 1; packet_id <= 4; packet_id++)
     {
-        AckPacket ack_packet(i + 1); 
+        AckPacket ack_packet(packet_id); 
         EXPECT_CALL(mock_socket_, WriteDatagram(ack_packet.ToBigEndianVector(), server_addr_, _))
             .WillOnce(Return(ack_packet.ToBigEndianVector().size()));
     }
-    // EXPECT_CALL(mock_socket_, WriteDatagram(ack_packets[1].ToBigEndianVector(), server_addr_, _))
-    //     .WillOnce(Return(ack_packets[1].ToBigEndianVector().size()));
-
-    // EXPECT_CALL(mock_socket_, WriteDatagram(ack_packets[2].ToBigEndianVector(), server_addr_, _))
-    //     .WillOnce(Return(ack_packets[2].ToBigEndianVector().size()));
-
-    // EXPECT_CALL(mock_socket_, WriteDatagram(ack_packets[3].ToBigEndianVector(), server_addr_, _))
-    //     .WillOnce(Return(ack_packets[3].ToBigEndianVector().size()));
 
 
     //Call method
