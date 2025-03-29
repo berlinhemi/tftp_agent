@@ -21,6 +21,10 @@ using ::testing::Expectation;
 using ::testing::Pointee;
 using ::testing::Invoke;
 
+#include "easylogging++.h"
+// Define it only once in project
+INITIALIZE_EASYLOGGINGPP 
+
 // std::ifstream::pos_type GetFileSize(const char* filename)
 // {
 //     std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
@@ -38,6 +42,8 @@ class TFTPClientTest : public testing::Test {
 
         void SetUp() 
         { 
+            el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "[%level] %msg");
+            
             tftp_cli_ = std::make_unique<TFTPClient>(&mock_socket_, server_addr_,  port_);
             kHeaderSize_ = tftp_cli_->GetHeaderSize();
             kMaxDataSize_ = tftp_cli_->GetDataSize();  
