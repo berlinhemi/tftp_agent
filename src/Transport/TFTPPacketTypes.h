@@ -42,7 +42,7 @@ public:
         buffer.push_back(m_opcode);
         buffer.push_back((uint16_t)(block_id >> 8));
         buffer.push_back((uint16_t)(block_id & 0x00FF));
-        std::copy(data.begin(), data.end(), std::back_inserter(data));
+        std::copy(data.begin(), data.end(), std::back_inserter(buffer));
         return buffer;
     }
 private:

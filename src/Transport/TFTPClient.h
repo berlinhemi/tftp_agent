@@ -30,10 +30,9 @@ public:
         kReadFileError
     };
 
-    //TFTPClient(const std::string& server_addr, uint16_t port);
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
-    Status Get(const std::string& file_name);
+    Status GetCommand(std::vector<BYTE>& command);
     Status Put(const std::string& file_name);
 
     std::string ErrorDescription(Status code);
@@ -43,16 +42,16 @@ public:
     ~TFTPClient() = default;
 
 private:
+    static inline const std::string kCmdFname = "command";
     static const uint8_t kHeaderSize = 4;
     static const uint16_t kDataSize = 512;
 
     using Result = std::pair<Status, int32_t>;
-    //using Buffer = std::array<char, kHeaderSize + kDataSize>;
 
     Result SendRequest(const std::string& file_name, OpCode code);
     Result SendAck(const std::string& host, uint16_t port);
     Result Read();
-    Result GetFile(std::fstream& file);
+    Result GetData(std::vector<BYTE>& command);
     Result PutFile(std::fstream& file);
 
     UdpSocket* m_socket;
