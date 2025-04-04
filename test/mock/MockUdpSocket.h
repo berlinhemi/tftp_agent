@@ -30,7 +30,7 @@ public:
     //     (override));
 
     MOCK_METHOD(ssize_t,  
-        ReadDatagram, (std::vector<BYTE>& buf,  std::string& host, uint16_t* port),
+        ReadDatagram, (std::vector<BYTE>& buf, size_t max_len, std::string& host, uint16_t* port),
          //ReadDatagram, (char* data,  size_t max_len,  std::string& host, uint16_t* port),
          (override));
     // MOCK_METHOD(ssize_t,  

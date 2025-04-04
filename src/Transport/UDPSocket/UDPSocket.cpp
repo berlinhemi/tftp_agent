@@ -97,14 +97,15 @@ void UdpSocket::Abort()
 }
 
 ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& buffer, 
-    //BYTE* data, 
-    //size_t max_len, 
+     size_t max_len, 
      std::string& host, uint16_t* port)
 {
-    if ( m_socket < 0 || buffer.capacity() < 1 )
-    {
-    //data.size() < max_len) {
+    if ( max_len < 1  ){
         return 0;
+    }
+    // Set buffer size if it too small
+    if(buffer.size() < max_len){
+        buffer.resize(max_len);
     }
     
     struct sockaddr_in remote_addr;
@@ -113,7 +114,7 @@ ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& buffer,
 
     const ssize_t size =  recvfrom(m_socket,
                                     &buffer[0],
-                                    buffer.capacity(),
+                                    max_len,
                                     MSG_WAITFORONE, // blocking operation! Use MSG_DONTWAIT for non blocking
                                     (struct sockaddr *)&remote_addr,
                                     &remote_addr_len);
@@ -123,6 +124,7 @@ ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& buffer,
         if (port != nullptr) {
             *port = ntohs(remote_addr.sin_port);
         }
+        buffer.resize(size);
     }
 
     return size;
