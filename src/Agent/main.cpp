@@ -26,7 +26,9 @@ int main(int argc, char **argv)
     //el::Configurations conf("/path/to/my-conf.conf");
     // Usage: 192.168.1.104 get example.txt
 
+    el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "false");
     el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "[%level] %msg");
+
 
     
     if (argc < 3) {

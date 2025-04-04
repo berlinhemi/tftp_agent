@@ -38,6 +38,7 @@ class TFTPClientTest : public testing::Test {
         void SetUp() 
         { 
             el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "[%level] %msg");
+            el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "false");
 
             tftp_cli_ = std::make_unique<TFTPClient>(&mock_socket_, server_addr_,  port_);
             kHeaderSize_ = tftp_cli_->GetHeaderSize();

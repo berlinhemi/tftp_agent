@@ -8,15 +8,6 @@
 #include <iostream>
 #include <format>
 
-// TFTPClient::TFTPClient(const std::string &server_addr, uint16_t port)
-//     : m_remote_addr(server_addr)
-//     , m_initial_port(port)
-//     , m_remote_port(0)
-//     , m_received_block_id(0)
-// {
-//     m_socket = new UdpSocket();
-//     m_status = m_socket->Init() ? Status::kSuccess : Status::kInvalidSocket;
-// }
 
 TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t port)
     : m_socket(sock)
@@ -29,18 +20,11 @@ TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t
     m_buffer.resize(kHeaderSize + kDataSize);
 }
 
-TFTPClient::Status TFTPClient::GetCommand(std::vector<BYTE>& command)
+TFTPClient::Status TFTPClient::GetCommand(std::vector<BYTE>& buffer)
 {
     if (m_status != Status::kSuccess) {
         return m_status;
     }
-
-    // std::string out_fname = file_name + ".received";
-    // std::fstream file(out_fname.c_str(), std::ios_base::out | std::ios_base::binary);
-    // if (!file) {
-    //     LOG(ERROR) << std::format("Cant't open file {} for writing", out_fname);
-    //     return Status::kOpenFileError;
-    // }
 
     // RRQ
     Result result = this->SendRequest(kCmdFname, OpCode::RRQ);
@@ -50,7 +34,7 @@ TFTPClient::Status TFTPClient::GetCommand(std::vector<BYTE>& command)
     m_received_block_id = 0;
 
     // FILE
-    result = this->GetData(command);
+    result = this->GetData(buffer);
     if (result.first == Status::kSuccess) {
         LOG(INFO) << std::format("{} bytes received", result.second);
     }
@@ -185,7 +169,7 @@ TFTPClient::Result TFTPClient::Read()
     }
 }
 
-TFTPClient::Result TFTPClient::GetData(std::vector<BYTE>& command)
+TFTPClient::Result TFTPClient::GetData(std::vector<BYTE>& buffer)
 {
     uint16_t totalReceivedBlocks = 0;
     uint16_t receivedDataBytes = 0;
@@ -203,19 +187,14 @@ TFTPClient::Result TFTPClient::GetData(std::vector<BYTE>& command)
         LOG(DEBUG) << std::format("receivedDataBytes: {}", receivedDataBytes);
         LOG(DEBUG) << std::format("m_received_block_id: {}", m_received_block_id);
         
-        // write to file
+        // save data to buffer
         if ((receivedDataBytes > 0) && (m_received_block_id > totalReceivedBlocks)) {
             ++totalReceivedBlocks;
             totalReceivedDataBytes += receivedDataBytes;
 
-            command.insert(command.end(),
+            buffer.insert(buffer.end(),
                             m_buffer.begin() + kHeaderSize,
                             m_buffer.begin() + kHeaderSize + receivedDataBytes);
-            // file.write((char*)&m_buffer[kHeaderSize], receivedDataBytes);
-            // if (file.bad()) {
-            //     //std::cout << "file.bad." << std::endl;
-            //     return std::make_pair(Status::kWriteFileError, totalReceivedDataBytes);
-            // }
         }
 
         // ACK
@@ -225,7 +204,7 @@ TFTPClient::Result TFTPClient::GetData(std::vector<BYTE>& command)
             return std::make_pair(result.first, totalReceivedDataBytes);
         }
 
-        LOG(INFO) << std::format("{} bytes ({} blocks) received", 
+        LOG(DEBUG) << std::format("{} bytes ({} blocks) received", 
                                 totalReceivedDataBytes,
                                 totalReceivedBlocks);
 
