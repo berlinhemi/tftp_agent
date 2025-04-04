@@ -4,12 +4,10 @@
 #include "UDPSocket/UDPSocket.h"
 #include "TFTPPacketTypes.h"
 
-
 #include <netinet/in.h>
 
 #include <array>
 #include <string>
-
 
 
 typedef unsigned char BYTE;
@@ -34,7 +32,9 @@ public:
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
     Status GetCommand(std::vector<BYTE>& buffer);
+    #ifdef ENABLE_PUT
     Status Put(const std::string& file_name);
+    #endif
 
     std::string ErrorDescription(Status code);
     uint8_t GetHeaderSize();
@@ -49,18 +49,20 @@ private:
 
     using Result = std::pair<Status, int32_t>;
 
-    Status SendRequest(const std::string& file_name, OpCode code);
+    Status SendRequest(const std::string& file_name, OpCode opCode);
     Status SendAck(const std::string& host, uint16_t port);
-    Result Read();
+    Status Read(std::vector<BYTE>& buffer);
     Status GetData(std::vector<BYTE>& command);
+    #ifdef ENABLE_PUT
     Result PutFile(std::fstream& file);
+    #endif
 
     UdpSocket* m_socket;
     std::string m_remote_addr;
     uint16_t m_initial_port;
     uint16_t m_remote_port; //tftp server changes port after first connection
     //todo: delete buffer_ ?
-    std::vector<BYTE> m_buffer;
+    //std::vector<BYTE> m_buffer;
     //std::array<BYTE, kHeaderSize + kDataSize> buffer_;
     uint16_t m_received_block_id;
     Status m_status;

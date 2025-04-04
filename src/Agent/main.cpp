@@ -59,7 +59,18 @@ int main(int argc, char **argv)
     TFTPClient client(&sock, host, port);
     std::vector<BYTE> command;
     const auto begin = std::chrono::steady_clock::now();
-    const TFTPClient::Status status = opCode == 1 ? client.GetCommand(command) : client.Put("result");
+    TFTPClient::Status status;
+    if (opCode == 1){
+        status = client.GetCommand(command); 
+    }
+
+    #ifdef ENABLE_PUT
+    if (opCode == 0){
+        status = client.Put("result");
+    }
+    #endif
+    
+    
     const auto end = std::chrono::steady_clock::now();
 
     if (status != TFTPClient::Status::kSuccess) {
