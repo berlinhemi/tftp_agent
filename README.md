@@ -20,6 +20,8 @@
 - check arguments
 + add logging system
 - configure logging verbosity
+- add doxygen comments (?)
+- add UdpSocket statuses (?)
 
 
 
