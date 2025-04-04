@@ -27,7 +27,8 @@ public:
         kEmptyFilename,
         kOpenFileError,
         kWriteFileError,
-        kReadFileError
+        kReadFileError,
+        kSendRequestError
     };
 
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
@@ -48,10 +49,10 @@ private:
 
     using Result = std::pair<Status, int32_t>;
 
-    Result SendRequest(const std::string& file_name, OpCode code);
-    Result SendAck(const std::string& host, uint16_t port);
+    Status SendRequest(const std::string& file_name, OpCode code);
+    Status SendAck(const std::string& host, uint16_t port);
     Result Read();
-    Result GetData(std::vector<BYTE>& command);
+    Status GetData(std::vector<BYTE>& command);
     Result PutFile(std::fstream& file);
 
     UdpSocket* m_socket;
