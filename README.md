@@ -19,6 +19,7 @@
 - add const to some methods
 - check arguments
 + add logging system
+- configure logging verbosity
 
 
 
