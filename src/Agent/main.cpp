@@ -58,20 +58,23 @@ int main(int argc, char **argv)
     UdpSocket sock;
     TFTPClient client(&sock, host, port);
     std::vector<BYTE> command;
-    const auto begin = std::chrono::steady_clock::now();
+    //const auto begin = std::chrono::steady_clock::now();
     TFTPClient::Status status;
     if (opCode == 1){
         status = client.GetCommand(command); 
     }
 
-    #ifdef ENABLE_PUT
-    if (opCode == 0){
-        status = client.Put("result");
+    
+    
+    if (opCode == 2){
+        //std::vector<BYTE> data{'1','2','3','4','5','6','7','8','9'};
+        std::vector<BYTE> data(2000,'1');
+        status = client.PutResults(data);
     }
-    #endif
+  
     
     
-    const auto end = std::chrono::steady_clock::now();
+    //const auto end = std::chrono::steady_clock::now();
 
     if (status != TFTPClient::Status::kSuccess) {
         LOG(ERROR) << client.ErrorDescription(status).c_str();
@@ -87,8 +90,8 @@ int main(int argc, char **argv)
         LOG(INFO) << oss.str();
     }
 
-    LOG(INFO) << std::format("Elapsed time: {} [ms]", 
-                            std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+    //LOG(INFO) << std::format("Elapsed time: {} [ms]", 
+    //                       std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
   
     return 0;
 }

@@ -32,9 +32,9 @@ public:
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
     Status GetCommand(std::vector<BYTE>& buffer);
-    #ifdef ENABLE_PUT
-    Status Put(const std::string& file_name);
-    #endif
+    
+    Status PutResults(const std::vector<BYTE>& data /*const std::string& file_name*/);
+    
 
     std::string ErrorDescription(Status code);
     uint8_t GetHeaderSize();
@@ -44,8 +44,9 @@ public:
 
 private:
     static inline const std::string kCmdFname = "command";
+    static inline const std::string kResultFname = "result";
     static const uint8_t kHeaderSize = 4;
-    static const uint16_t kDataSize = 512;
+    static const uint16_t kDataMaxSize = 512;
 
     using Result = std::pair<Status, int32_t>;
 
@@ -53,9 +54,9 @@ private:
     Status SendAck(const std::string& host, uint16_t port);
     Status Read(std::vector<BYTE>& buffer);
     Status GetData(std::vector<BYTE>& command);
-    #ifdef ENABLE_PUT
-    Result PutFile(std::fstream& file);
-    #endif
+   
+    Status PutData(const std::vector<BYTE>& data);
+   
 
     UdpSocket* m_socket;
     std::string m_remote_addr;
