@@ -17,17 +17,14 @@ TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t
     , m_remote_port(0)
     , m_received_block_id(0)
 {
-    m_status = m_socket->IsInitialized() ? Status::kSuccess : Status::kInvalidSocket;
-    assert(m_status, Status::kSuccess);
-    //m_buffer.resize(kHeaderSize + kDataMaxSize);
+    if (!m_socket->IsInitialized())
+    {
+        throw std::runtime_error("Failed to initialize socket");
+    }
 }
 
 TFTPClient::Status TFTPClient::GetCommand(std::vector<BYTE>& buffer)
 {
-    if (m_status != Status::kSuccess) {
-        return m_status;
-    }
-    
     // RRQ
     Status status = this->SendRequest(kCmdFname, OpCode::RRQ);
     if (status != Status::kSuccess) {
@@ -48,10 +45,6 @@ TFTPClient::Status TFTPClient::GetCommand(std::vector<BYTE>& buffer)
 
 TFTPClient::Status TFTPClient::PutResults(const std::vector<BYTE>& data)
 {
-    if (m_status != Status::kSuccess) {
-        return m_status;
-    }
-
     // WRQ    
     Status status = this->SendRequest(kResultFname, OpCode::WRQ);
     if (status != Status::kSuccess) {
