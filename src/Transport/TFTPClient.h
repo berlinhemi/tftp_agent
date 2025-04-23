@@ -32,13 +32,13 @@ public:
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
     Status GetCommand(std::vector<BYTE>& buffer);
+    Status PutResults(const std::vector<BYTE>& data);
     
-    Status PutResults(const std::vector<BYTE>& data /*const std::string& file_name*/);
-    
-
-    std::string ErrorDescription(Status code);
-    uint8_t GetHeaderSize();
-    uint16_t GetDataSize();
+    static uint8_t GetHeaderSize() ;
+    static uint16_t GetDataSize() ;
+    static std::string GetCommandFName();
+    static std::string GetResultFName();
+    std::string ErrorDescription(Status code) const;
 
     ~TFTPClient() = default;
 

@@ -37,10 +37,8 @@ int main(int argc, char **argv)
     }
 
     const uint16_t port = 69;
-
     std::string host(argv[1]);
     std::string operation(argv[2]);
-    //std::string filename(argv[3]);
 
     
     std::transform(operation.begin(), operation.end(), operation.begin(),
