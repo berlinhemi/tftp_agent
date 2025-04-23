@@ -52,21 +52,16 @@ private:
 
     Status SendRequest(const std::string& file_name, OpCode opCode);
     Status SendAck(const std::string& host, uint16_t port);
-    Status Read(std::vector<BYTE>& buffer);
     Status GetData(std::vector<BYTE>& command);
-   
     Status PutData(const std::vector<BYTE>& data);
-   
+    Status Read(std::vector<BYTE>& buffer);
 
     UdpSocket* m_socket;
     std::string m_remote_addr;
     uint16_t m_initial_port;
-    uint16_t m_remote_port; //tftp server changes port after first connection
-    //todo: delete buffer_ ?
-    //std::vector<BYTE> m_buffer;
-    //std::array<BYTE, kHeaderSize + kDataSize> buffer_;
+    // Note: tftp server changes port durind data exchange
+    uint16_t m_remote_port; 
     uint16_t m_received_block_id;
-    Status m_status;
 };
 
 #endif // TFTPCLIENT_H
