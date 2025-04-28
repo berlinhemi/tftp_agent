@@ -60,6 +60,13 @@ int main(int argc, char **argv)
     TFTPClient::Status status;
     if (opCode == 1){
         status = client.GetCommand(command); 
+        std::ostringstream oss;
+        LOG(INFO) << "command size:" << command.size();
+        oss << "GetCommand result: ";
+        for (auto e : command){
+            oss << e << " ";
+        }
+        LOG(INFO) << oss.str();
     }
 
     
@@ -79,14 +86,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (opCode == 1){
-        std::ostringstream oss;
-        oss << "GetCommand result: ";
-        for (auto e : command){
-            oss << e << " ";
-        }
-        LOG(INFO) << oss.str();
-    }
+  
 
     //LOG(INFO) << std::format("Elapsed time: {} [ms]", 
     //                       std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
