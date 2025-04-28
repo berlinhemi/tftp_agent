@@ -111,37 +111,21 @@ TEST_F(TFTPClientTest, Get_SendRequestReturnsError_Failed)
     EXPECT_EQ(m_tftp_client->GetCommand(buffer), TFTPClient::Status::kSendRequestError);
 }
 
-/*
-    @brief Test of Put method
-        when SendRequest failed since WriteDatagram returns zero
-*/
-TEST_F(TFTPClientTest, Put_SendRequestReturnsError_Failed)
-{
-    // WriteRequest packet
-    std::string fname = TFTPClient::GetResultFName();
-    std::vector<BYTE> req = CreateRequest(fname, OpCode::WRQ);
-  
-    EXPECT_CALL(m_mock_socket, WriteDatagram(req, m_server_addr, m_port))
-            .WillOnce(Return(0));
-    
-    // Call method
-    std::vector<BYTE> buffer {1, 2, 3};
-    EXPECT_EQ(m_tftp_client->PutResults(buffer), TFTPClient::Status::kSendRequestError);
-}
 
 /*
     @brief Test of GetCommand method
         when SendRequest and GetFile successed 
         while reading less than 512 bytes of payload
 */
-TEST_F(TFTPClientTest, Get_ReadFileLessThanMaxDataSize_Success)
+TEST_F(TFTPClientTest, Get_ReadFileSmallerThanMaxDataSize_Success)
 {
-    const std::string fname = "test_data/data_500B.bin";
-    ASSERT_TRUE(std::filesystem::exists(fname));
-    size_t data_size = std::filesystem::file_size(fname);
+    const std::string input_fname = "test_data/data_500B.bin";
+    ASSERT_TRUE(std::filesystem::exists(input_fname));
+    size_t data_size = std::filesystem::file_size(input_fname);
     // Check filesize
     ASSERT_GT(data_size, 0);
-    ASSERT_LE(data_size, m_max_data_size);
+    ASSERT_LE(data_size, m_max_data_size) << "Filesize of " << input_fname 
+            << "is bigger than " << m_max_data_size << " bytes.";
     
     const uint16_t block_id = 1;
 
@@ -151,7 +135,7 @@ TEST_F(TFTPClientTest, Get_ReadFileLessThanMaxDataSize_Success)
     ssize_t RRQ_packet_size = 2 +  TFTPClient::GetCommandFName().size() + 1 + strlen("octet") + 1 ;
     EXPECT_CALL(m_mock_socket, WriteDatagram(_, m_server_addr, m_port)).WillOnce(Return(RRQ_packet_size));
     // Read data in one packet
-    std::vector expected_data = ReadAllBinaryData(fname);
+    std::vector expected_data = ReadAllBinaryData(input_fname);
     DataPacket reply_packet (block_id, expected_data);
     EXPECT_CALL(m_mock_socket, ReadDatagram(_, _, m_server_addr, _))
         .WillOnce
@@ -243,12 +227,83 @@ TEST_F(TFTPClientTest, GetFile2000BytesSuccess)
             .WillOnce(Return(ack_packet.ToBigEndianVector().size()));
     }
 
-
     // Call method
     std::vector<BYTE> buffer;
     EXPECT_EQ(m_tftp_client->GetCommand(buffer), TFTPClient::Status::kSuccess);
     // Check results
     EXPECT_EQ(buffer, expected_data);
+}
+
+
+/*
+    @brief Test of Put method
+        when SendRequest failed since WriteDatagram returns zero
+*/
+TEST_F(TFTPClientTest, Put_SendRequestReturnsError_Failed)
+{
+    // WriteRequest packet
+    std::string fname = TFTPClient::GetResultFName();
+    std::vector<BYTE> req = CreateRequest(fname, OpCode::WRQ);
+  
+    EXPECT_CALL(m_mock_socket, WriteDatagram(req, m_server_addr, m_port))
+            .WillOnce(Return(0));
+    
+    // Call method
+    std::vector<BYTE> buffer {1, 2, 3};
+    EXPECT_EQ(m_tftp_client->PutResults(buffer), TFTPClient::Status::kSendRequestError);
+}
+
+/*
+    @brief Test of PutResults method
+        when SendRequest and PutFile successed 
+        while sending less than 512 bytes of payload
+*/
+TEST_F(TFTPClientTest, Put_SendFileSmallerThanMaxDataSize_Success)
+{
+    const std::string input_fname = "test_data/data_500B.bin";
+    ASSERT_TRUE(std::filesystem::exists(input_fname));
+    size_t data_size = std::filesystem::file_size(input_fname);
+    // Check filesize
+    ASSERT_GT(data_size, 0);
+    ASSERT_LE(data_size, m_max_data_size) << "Filesize of " << input_fname 
+            << "is bigger than " << m_max_data_size << " bytes.";
+    
+    uint16_t block_id = 0;
+
+    // Set expectations
+    InSequence s;
+    // Send write request
+    ssize_t WRQ_packet_size = 2 +  TFTPClient::GetResultFName().size() + 1 + strlen("octet") + 1 ;
+    EXPECT_CALL(m_mock_socket, WriteDatagram(_, m_server_addr, m_port)).WillOnce(Return(WRQ_packet_size));
+    
+    // Read ACK
+    AckPacket ack_packet_1(block_id); 
+    std::vector<BYTE> ack_bytes = ack_packet_1.ToBigEndianVector();
+    EXPECT_CALL(m_mock_socket, ReadDatagram(_, _, m_server_addr, _))
+            .WillOnce(DoAll(
+                SetArgReferee<0>(ack_bytes), 
+                Return(ack_bytes.size())
+            ));
+
+    // Send data in one packet
+    block_id++;
+    std::vector data_bytes = ReadAllBinaryData(input_fname);
+    DataPacket data_packet (block_id, data_bytes);
+    EXPECT_CALL(m_mock_socket, WriteDatagram(data_packet.ToBigEndianVector(), m_server_addr, _))
+        .WillOnce(Return(data_packet.ToBigEndianVector().size()));
+
+    // Read ACK
+    AckPacket ack_packet_2(block_id); 
+    ack_bytes = ack_packet_2.ToBigEndianVector();
+    EXPECT_CALL(m_mock_socket, ReadDatagram(_, _, m_server_addr, _))
+            .WillOnce(DoAll(
+                SetArgReferee<0>(ack_bytes), 
+                Return(ack_bytes.size())
+            ));
+
+    
+    // Call method
+    EXPECT_EQ(m_tftp_client->PutResults(data_bytes), TFTPClient::Status::kSuccess);
 }
 
 
