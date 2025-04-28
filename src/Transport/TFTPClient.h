@@ -35,7 +35,8 @@ public:
     Status PutResults(const std::vector<BYTE>& data);
     
     static uint8_t GetHeaderSize() ;
-    static uint16_t GetDataSize() ;
+    //static uint16_t GetDataSize() ;
+    static uint16_t GetMaxDataSize();
     static std::string GetCommandFName();
     static std::string GetResultFName();
     std::string ErrorDescription(Status code) const;

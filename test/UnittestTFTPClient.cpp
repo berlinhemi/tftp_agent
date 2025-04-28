@@ -45,7 +45,7 @@ class TFTPClientTest : public testing::Test {
 
             m_tftp_client = std::make_unique<TFTPClient>(&m_mock_socket, m_server_addr,  m_port);
             m_header_size = TFTPClient::GetHeaderSize();
-            m_max_data_size = TFTPClient::GetDataSize();  
+            m_max_data_size = TFTPClient::GetMaxDataSize();  
         } 
 
         void TearDown() {} 
@@ -130,13 +130,13 @@ TEST_F(TFTPClientTest, Put_SendRequestReturnsError_Failed)
 }
 
 /*
-    @brief Test of Put method
+    @brief Test of GetCommand method
         when SendRequest and GetFile successed 
-        while reading 512-4 bytes of payload
+        while reading less than 512 bytes of payload
 */
-TEST_F(TFTPClientTest, Get_ReadFileMaxPacketSize_Success)
+TEST_F(TFTPClientTest, Get_ReadFileLessThanMaxDataSize_Success)
 {
-    const std::string fname = "test_data/data_508B.bin";
+    const std::string fname = "test_data/data_500B.bin";
     ASSERT_TRUE(std::filesystem::exists(fname));
     size_t data_size = std::filesystem::file_size(fname);
     // Check filesize
@@ -175,76 +175,81 @@ TEST_F(TFTPClientTest, Get_ReadFileMaxPacketSize_Success)
     EXPECT_EQ(buffer, expected_data);
 }
 
-// /*
-//     @brief Test of Put method
-//         when SendRequest and GetFile successed 
-//         while reading 2000 bytes
-// */
-// TEST_F(TFTPClientTest, GetFile2000BytesSuccess)
-// {
-//     const std::string fname = "test_data/data_2000B.txt"; 
-//     ASSERT_TRUE(std::filesystem::exists(fname));
-//     const size_t fileSize = std::filesystem::file_size(fname);
-//     ASSERT_EQ(fileSize, 2000) << "Filesize of " << fname << "is not 2000 bytes.";
+/*
+    @brief Test of GetCommand method
+        when SendRequest and GetFile successed 
+        while reading 2000 bytes
+*/
+TEST_F(TFTPClientTest, GetFile2000BytesSuccess)
+{
+    const std::string input_fname = "test_data/data_2000B.txt"; 
+    ASSERT_TRUE(std::filesystem::exists(input_fname));
+    const size_t file_size = std::filesystem::file_size(input_fname);
+    ASSERT_EQ(file_size, 2000) << "Filesize of " << input_fname << "is not 2000 bytes.";
 
-//     // Read request
-//     ssize_t RRQ_packet_size = 2 + fname.size() + 1 + strlen("octet") + 1 ;
-//     EXPECT_CALL(mock_socket_, WriteDatagram(_, server_addr_, port_)).WillOnce(Return(RRQ_packet_size));
+    // Read request
+    ssize_t RRQ_packet_size = 2 + TFTPClient::GetCommandFName().size() + 1 + strlen("octet") + 1 ;
+    EXPECT_CALL(m_mock_socket, WriteDatagram(_, m_server_addr, m_port)).WillOnce(Return(RRQ_packet_size));
 
-//     uint16_t block_id = 1;
-//     // Expected replies from server
-//     std::vector<std::pair<DataPacket, size_t>> expectedReplies; // ermove size_t?
-//     std::fstream fin(fname, std::ios_base::in | std::ios_base::binary);
-//     ASSERT_TRUE(fin.is_open());
-//     while(!fin.eof())
-//     {
-//         std::vector<BYTE> data(kMaxDataSize_);
-//         // Read kMaxDataSize_ bytes of data 
-//         fin.read((char*)&data[0], kMaxDataSize_);
-//         data.resize(fin.gcount()); // Check it
-//         DataPacket reply_packet (block_id, data);
-//         expectedReplies.push_back({reply_packet, fin.gcount()});
-//         block_id++;
-//     }
+    uint16_t block_id = 1;
+    // Expected replies from server
+    std::vector<std::pair<DataPacket, size_t>> expected_replies; // ermove size_t?
+    std::vector<BYTE> expected_data;
+    std::fstream fin(input_fname, std::ios_base::in | std::ios_base::binary);
+    ASSERT_TRUE(fin.is_open());
+    while(!fin.eof())
+    {
+        uint16_t max_data_size = TFTPClient::GetMaxDataSize();
+        std::vector<BYTE> data(max_data_size);
+        // Read kMaxDataSize_ bytes of data 
+        fin.read((char*)&data[0], max_data_size);
+        data.resize(fin.gcount()); // Adjust size if fin.gcount() < max_data_size
+        expected_data.insert(expected_data.end(), data.begin(), data.end());
+        DataPacket reply_packet (block_id, data);
+        expected_replies.push_back({reply_packet, fin.gcount()});
+        block_id++;
+    }
 
-//     // fileSize / kMaxDataSize_ equals 4
-//     ASSERT_EQ(expectedReplies.size(), 4);
-//     // Read data in four steps
-//     EXPECT_CALL(mock_socket_, ReadDatagram(_, server_addr_, _))
-//         .WillOnce(DoAll(
-//                     SetArgReferee<0>(expectedReplies[0].first.ToBigEndianVector()),
-//                     Return(expectedReplies[0].second + kHeaderSize_)
-//                     )
-//             )
-//         .WillOnce(DoAll(
-//                     SetArgReferee<0>(expectedReplies[1].first.ToBigEndianVector()),
-//                     Return(expectedReplies[1].second + kHeaderSize_)
-//                     )
-//             )
-//         .WillOnce(DoAll(
-//                     SetArgReferee<0>(expectedReplies[2].first.ToBigEndianVector()),
-//                     Return(expectedReplies[2].second + kHeaderSize_)
-//                     )
-//             )
-//         .WillOnce(DoAll(
-//                     SetArgReferee<0>(expectedReplies[3].first.ToBigEndianVector()),
-//                     Return(expectedReplies[3].second + kHeaderSize_)
-//                     )
-//         );
+    const uint32_t chunks_count = 4; // fileSize / max_data_size
+    ASSERT_EQ(expected_replies.size(), chunks_count);
+    // Read data in chunks_count steps
+    EXPECT_CALL(m_mock_socket, ReadDatagram(_, _, m_server_addr, _))
+        .WillOnce(DoAll(
+                    SetArgReferee<0>(expected_replies[0].first.ToBigEndianVector()),
+                    Return(expected_replies[0].second + m_header_size)
+                    )
+            )
+        .WillOnce(DoAll(
+                    SetArgReferee<0>(expected_replies[1].first.ToBigEndianVector()),
+                    Return(expected_replies[1].second + m_header_size)
+                    )
+            )
+        .WillOnce(DoAll(
+                    SetArgReferee<0>(expected_replies[2].first.ToBigEndianVector()),
+                    Return(expected_replies[2].second + m_header_size)
+                    )
+            )
+        .WillOnce(DoAll(
+                    SetArgReferee<0>(expected_replies[3].first.ToBigEndianVector()),
+                    Return(expected_replies[3].second + m_header_size)
+                    )
+        );
     
+    // ACK pacets
+    for(uint16_t packet_id = 1; packet_id <= chunks_count; packet_id++)
+    {
+        AckPacket ack_packet(packet_id); 
+        EXPECT_CALL(m_mock_socket, WriteDatagram(ack_packet.ToBigEndianVector(), m_server_addr, _))
+            .WillOnce(Return(ack_packet.ToBigEndianVector().size()));
+    }
 
-//     // ACK pacets
-//     for(uint16_t packet_id = 1; packet_id <= 4; packet_id++)
-//     {
-//         AckPacket ack_packet(packet_id); 
-//         EXPECT_CALL(mock_socket_, WriteDatagram(ack_packet.ToBigEndianVector(), server_addr_, _))
-//             .WillOnce(Return(ack_packet.ToBigEndianVector().size()));
-//     }
 
-
-//     // Call method
-//     EXPECT_EQ(tftp_cli_->Get(fname), TFTPClient::Status::kSuccess);
-// }
+    // Call method
+    std::vector<BYTE> buffer;
+    EXPECT_EQ(m_tftp_client->GetCommand(buffer), TFTPClient::Status::kSuccess);
+    // Check results
+    EXPECT_EQ(buffer, expected_data);
+}
 
 
 int main(int argc, char** argv)

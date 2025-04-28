@@ -197,8 +197,8 @@ TFTPClient::Status TFTPClient::GetData(std::vector<BYTE>& data)
         }
         receivedDataBytes = buffer.size();
         //if verbose
-        LOG(DEBUG) << std::format("receivedDataBytes: {}", receivedDataBytes);
-        LOG(DEBUG) << std::format("m_received_block_id: {}", m_received_block_id);
+        LOG(DEBUG) << std::format("GetData(): receivedDataBytes: {}", receivedDataBytes);
+        LOG(DEBUG) << std::format("GetData(): m_received_block_id: {}", m_received_block_id);
         
         // Save data to buffer
         if ((receivedDataBytes > 0) && (m_received_block_id > totalReceivedBlocks)) {
@@ -218,12 +218,12 @@ TFTPClient::Status TFTPClient::GetData(std::vector<BYTE>& data)
             return status;
         }
 
-        LOG(DEBUG) << std::format("{} bytes ({} blocks) received", 
+        LOG(DEBUG) << std::format("GetData(): {} bytes / {} blocks received", 
                                 totalReceivedDataBytes,
                                 totalReceivedBlocks);
 
 
-    } while(receivedDataBytes == kDataMaxSize);
+    } while(receivedDataBytes == kHeaderSize + kDataMaxSize);
     
     return Status::kSuccess;
 }
@@ -292,10 +292,15 @@ uint8_t TFTPClient::GetHeaderSize()
     return kHeaderSize; 
 }
 
-uint16_t TFTPClient::GetDataSize() 
+uint16_t TFTPClient::GetMaxDataSize() 
 {
     return kDataMaxSize; 
 }
+
+//uint16_t TFTPClient::GetDataSize()
+//{
+//    return kDataMaxSize;
+//}
 
 std::string  TFTPClient::GetCommandFName() 
 {
