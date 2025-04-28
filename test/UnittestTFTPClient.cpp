@@ -123,8 +123,8 @@ TEST_F(TFTPClientTest, Put_SendRequestReturnsError_Failed)
   
     EXPECT_CALL(m_mock_socket, WriteDatagram(req, m_server_addr, m_port))
             .WillOnce(Return(0));
+    
     // Call method
-
     std::vector<BYTE> buffer {1, 2, 3};
     EXPECT_EQ(m_tftp_client->PutResults(buffer), TFTPClient::Status::kSendRequestError);
 }
@@ -132,18 +132,18 @@ TEST_F(TFTPClientTest, Put_SendRequestReturnsError_Failed)
 /*
     @brief Test of Put method
         when SendRequest and GetFile successed 
-        while reading 500 bytes
+        while reading 512-4 bytes of payload
 */
-TEST_F(TFTPClientTest, Get_ReadFile500Bytes_Success)
+TEST_F(TFTPClientTest, Get_ReadFileMaxPacketSize_Success)
 {
-    const std::string fname = "test_data/data_500B.txt";
+    const std::string fname = "test_data/data_508B.bin";
     ASSERT_TRUE(std::filesystem::exists(fname));
     size_t data_size = std::filesystem::file_size(fname);
     // Check filesize
     ASSERT_GT(data_size, 0);
     ASSERT_LE(data_size, m_max_data_size);
     
-    uint16_t block_id = 1;
+    const uint16_t block_id = 1;
 
     // Set expectations
     InSequence s;
@@ -161,6 +161,7 @@ TEST_F(TFTPClientTest, Get_ReadFile500Bytes_Success)
                 Return(data_size + m_header_size)
                 )
             );
+
     // Send ACK packet (server port will be changed)
     AckPacket ack_packet(block_id);
     std::vector<BYTE> ack_packet_bytes = ack_packet.ToBigEndianVector();
@@ -170,7 +171,8 @@ TEST_F(TFTPClientTest, Get_ReadFile500Bytes_Success)
     // Call method
     std::vector<BYTE> buffer;
     EXPECT_EQ(m_tftp_client->GetCommand(buffer), TFTPClient::Status::kSuccess);
-
+    // Check results
+    EXPECT_EQ(buffer, expected_data);
 }
 
 // /*

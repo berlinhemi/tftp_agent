@@ -208,7 +208,7 @@ TFTPClient::Status TFTPClient::GetData(std::vector<BYTE>& data)
 
             data.insert(data.end(),
                         buffer.begin() + kHeaderSize,
-                        buffer.begin() + kHeaderSize + receivedDataBytes);
+                        buffer.end());
         }
 
         // ACK
