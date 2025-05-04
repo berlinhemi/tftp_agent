@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     
     if (opCode == 2){
         // Some data
-        std::vector<BYTE> data(500, '1');
+        std::vector<BYTE> data(2000, '1');
         status = client.PutResults(data);
     }
   
