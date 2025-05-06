@@ -26,10 +26,32 @@ int main(int argc, char **argv)
     //el::Configurations conf("/path/to/my-conf.conf");
     // Usage: 192.168.1.104 get example.txt
 
-    el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "false");
-    el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "[%level] %msg");
+    //el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "false");
+    //el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "[%level] %msg");
+   
+
+    // el::Logger* defaultLogger = el::Loggers::getLogger("default");
+    
+    // // Set the logging level
+    // // You can change this to the desired level
+    // defaultLogger->configure(el::Level::Info, el::ConfigurationType::Enabled, "true");
+    
+    // // Disable all levels below Info (this will disable Debug)
+    // defaultLogger->configure(el::Level::Debug, el::ConfigurationType::Enabled, "false");
+    
+    el::Configurations defaultConf;
+    defaultConf.setToDefault();
+    //  defaultConf.set(el::Level::Info, el::ConfigurationType::Enabled, "true");
+    defaultConf.set(el::Level::Debug, el::ConfigurationType::Enabled, "false");
+    
+    el::Loggers::reconfigureLogger("default", defaultConf);
+    el::Loggers::reconfigureLogger("default", el::ConfigurationType::Format, "[%level] %msg");
+    el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
 
 
+    LOG(INFO) << "INFO";
+    LOG(ERROR) << "ERROR";
+    LOG(DEBUG) << "DEBUG";
     
     if (argc < 3) {
         show_help(argv[0]);
@@ -70,7 +92,6 @@ int main(int argc, char **argv)
     }
 
     
-    
     if (opCode == 2){
         // Some data
         std::vector<BYTE> data(2000, '1');
@@ -78,14 +99,12 @@ int main(int argc, char **argv)
     }
   
     
-    
     //const auto end = std::chrono::steady_clock::now();
 
     if (status != TFTPClient::Status::kSuccess) {
         LOG(ERROR) << client.ErrorDescription(status).c_str();
         return 1;
     }
-
   
 
     //LOG(INFO) << std::format("Elapsed time: {} [ms]", 
