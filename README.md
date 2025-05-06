@@ -23,6 +23,7 @@
 - add doxygen comments (?)
 - add UdpSocket statuses (?)
 - m_received_block_id processing ?
+- add coverage
 
 
 -  **...**: ...
