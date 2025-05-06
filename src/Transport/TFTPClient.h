@@ -31,21 +31,20 @@ public:
 
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
-    Status GetCommand(std::vector<BYTE>& buffer);
-    Status PutResults(const std::vector<BYTE>& data);
+    Status Get(std::vector<BYTE>& buffer);
+    Status Put(const std::vector<BYTE>& data);
     
     static uint8_t GetHeaderSize() ;
-    //static uint16_t GetDataSize() ;
     static uint16_t GetMaxDataSize();
-    static std::string GetCommandFName();
-    static std::string GetResultFName();
+    static std::string GetDownloadedFName();
+    static std::string GetUploadedFName();
     std::string ErrorDescription(Status code) const;
 
     ~TFTPClient() = default;
 
 private:
-    static inline const std::string kCmdFname = "command";
-    static inline const std::string kResultFname = "result";
+    static inline const std::string kDownloadedFname = "input";
+    static inline const std::string kUploadedFname = "output";
     static const uint8_t kHeaderSize = 4;
     static const uint16_t kDataMaxSize = 512;
 
@@ -53,7 +52,7 @@ private:
 
     Status SendRequest(const std::string& file_name, OpCode opCode);
     Status SendAck(const std::string& host, uint16_t port);
-    Status GetData(std::vector<BYTE>& command);
+    Status GetData(std::vector<BYTE>& buffer);
     Status PutData(const std::vector<BYTE>& data);
     Status Read(std::vector<BYTE>& buffer);
 

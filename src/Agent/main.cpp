@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     //const auto begin = std::chrono::steady_clock::now();
     TFTPClient::Status status;
     if (opCode == 1){
-        status = client.GetCommand(command); 
+        status = client.Get(command); 
         std::ostringstream oss;
         LOG(INFO) << "command size:" << command.size();
         oss << "GetCommand result: ";
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
     if (opCode == 2){
         // Some data
         std::vector<BYTE> data(2000, '1');
-        status = client.PutResults(data);
+        status = client.Put(data);
     }
   
     

@@ -23,12 +23,12 @@ TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t
     }
 }
 
-TFTPClient::Status TFTPClient::GetCommand(std::vector<BYTE>& buffer)
+TFTPClient::Status TFTPClient::Get(std::vector<BYTE>& buffer)
 {
     // RRQ
-    Status status = SendRequest(kCmdFname, OpCode::RRQ);
+    Status status = SendRequest(kDownloadedFname, OpCode::RRQ);
     if (status != Status::kSuccess) {
-        LOG(ERROR) <<  "GetCommand(): failed to send read request";
+        LOG(ERROR) <<  "Get(): failed to send read request";
         return status;
     }
 
@@ -38,18 +38,18 @@ TFTPClient::Status TFTPClient::GetCommand(std::vector<BYTE>& buffer)
     status = GetData(buffer);
     if (status == Status::kSuccess) {
         //if verbose
-        LOG(INFO) << std::format("GetCommand(): total {} bytes received", buffer.size());
+        LOG(INFO) << std::format("Get(): total {} bytes received", buffer.size());
     }
     return status;
 }
 
 
-TFTPClient::Status TFTPClient::PutResults(const std::vector<BYTE>& data)
+TFTPClient::Status TFTPClient::Put(const std::vector<BYTE>& data)
 {
     // WRQ    
-    Status status = SendRequest(kResultFname, OpCode::WRQ);
+    Status status = SendRequest(kUploadedFname, OpCode::WRQ);
     if (status != Status::kSuccess) {
-        LOG(ERROR) <<  "PutResults(): failed to send write request";
+        LOG(ERROR) <<  "Put(): failed to send write request";
         return status;
     }
 
@@ -66,8 +66,7 @@ TFTPClient::Status TFTPClient::PutResults(const std::vector<BYTE>& data)
     status = PutData(data);
     if (status == Status::kSuccess) {
         //if verbose
-        LOG(INFO) << std::format("PutResults(): {} bytes written", data.size());
-
+        LOG(INFO) << std::format("Put(): {} bytes written", data.size());
     }
     return status;
 }
@@ -297,24 +296,13 @@ uint16_t TFTPClient::GetMaxDataSize()
     return kDataMaxSize; 
 }
 
-//uint16_t TFTPClient::GetDataSize()
-//{
-//    return kDataMaxSize;
-//}
 
-std::string  TFTPClient::GetCommandFName() 
+std::string  TFTPClient::GetDownloadedFName() 
 {
-    return kCmdFname;
+    return kDownloadedFname;
 }
-std::string  TFTPClient::GetResultFName() 
+std::string  TFTPClient::GetUploadedFName() 
 {
-    return kResultFname;
+    return kUploadedFname;
 }
-
-// TFTPClient::~TFTPClient()
-// {
-//     //danger zone (check it)
-//     //delete m_socket;
-//     //m_socket = nullptr;
-// }
 
