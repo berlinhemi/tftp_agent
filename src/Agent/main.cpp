@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <chrono>
 #include <format>
+#include <sstream>
 
 #include "easylogging++.h"
 // Define it only once in project
@@ -10,9 +11,9 @@ INITIALIZE_EASYLOGGINGPP
 void show_help(const std::string program_name)
 {
     std::cout << format("nTFTP Client\n"
-        "Usage:   {0} HOST [get | put] FILE\n"  
-        "Examples:\n\t{0} 192.168.1.104 get somefile.txt\n"
-        "\t{0} server.com put somefile.txt\n"
+        "Usage:   {0} HOST [get | put] \n"  
+        "Examples:\n\t{0} 192.168.1.104 get \n"
+        "\t{0} server.com put \n"
         , program_name);
     
 }
@@ -25,19 +26,41 @@ int main(int argc, char **argv)
     //el::Configurations conf("/path/to/my-conf.conf");
     // Usage: 192.168.1.104 get example.txt
 
-    el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "[%level] %msg");
+    //el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "false");
+    //el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "[%level] %msg");
+   
 
+    // el::Logger* defaultLogger = el::Loggers::getLogger("default");
     
-    if (argc < 4) {
+    // // Set the logging level
+    // // You can change this to the desired level
+    // defaultLogger->configure(el::Level::Info, el::ConfigurationType::Enabled, "true");
+    
+    // // Disable all levels below Info (this will disable Debug)
+    // defaultLogger->configure(el::Level::Debug, el::ConfigurationType::Enabled, "false");
+    
+    el::Configurations defaultConf;
+    defaultConf.setToDefault();
+    //  defaultConf.set(el::Level::Info, el::ConfigurationType::Enabled, "true");
+    defaultConf.set(el::Level::Debug, el::ConfigurationType::Enabled, "false");
+    
+    el::Loggers::reconfigureLogger("default", defaultConf);
+    el::Loggers::reconfigureLogger("default", el::ConfigurationType::Format, "[%level] %msg");
+    el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
+
+
+    LOG(INFO) << "INFO";
+    LOG(ERROR) << "ERROR";
+    LOG(DEBUG) << "DEBUG";
+    
+    if (argc < 3) {
         show_help(argv[0]);
         return 1;
     }
 
     const uint16_t port = 69;
-
     std::string host(argv[1]);
     std::string operation(argv[2]);
-    std::string filename(argv[3]);
 
     
     std::transform(operation.begin(), operation.end(), operation.begin(),
@@ -54,18 +77,38 @@ int main(int argc, char **argv)
    
     UdpSocket sock;
     TFTPClient client(&sock, host, port);
+    std::vector<BYTE> command;
+    //const auto begin = std::chrono::steady_clock::now();
+    TFTPClient::Status status;
+    if (opCode == 1){
+        status = client.GetCommand(command); 
+        std::ostringstream oss;
+        LOG(INFO) << "command size:" << command.size();
+        oss << "GetCommand result: ";
+        for (auto e : command){
+            oss << e << " ";
+        }
+        LOG(INFO) << oss.str();
+    }
 
-    const auto begin = std::chrono::steady_clock::now();
-    const TFTPClient::Status status = opCode == 1 ? client.Get(filename) : client.Put(filename);
-    const auto end = std::chrono::steady_clock::now();
+    
+    if (opCode == 2){
+        // Some data
+        std::vector<BYTE> data(2000, '1');
+        status = client.PutResults(data);
+    }
+  
+    
+    //const auto end = std::chrono::steady_clock::now();
 
     if (status != TFTPClient::Status::kSuccess) {
         LOG(ERROR) << client.ErrorDescription(status).c_str();
         return 1;
     }
+  
 
-    LOG(INFO) << std::format("Elapsed time: {} [ms]", 
-                            std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+    //LOG(INFO) << std::format("Elapsed time: {} [ms]", 
+    //                       std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
   
     return 0;
 }

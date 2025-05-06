@@ -19,6 +19,10 @@
 - add const to some methods
 - check arguments
 + add logging system
+- configure logging verbosity
+- add doxygen comments (?)
+- add UdpSocket statuses (?)
+- m_received_block_id processing ?
 
 
 -  **...**: ...

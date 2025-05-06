@@ -4,12 +4,10 @@
 #include "UDPSocket/UDPSocket.h"
 #include "TFTPPacketTypes.h"
 
-
 #include <netinet/in.h>
 
 #include <array>
 #include <string>
-
 
 
 typedef unsigned char BYTE;
@@ -27,43 +25,44 @@ public:
         kEmptyFilename,
         kOpenFileError,
         kWriteFileError,
-        kReadFileError
+        kReadFileError,
+        kSendRequestError
     };
 
-    //TFTPClient(const std::string& server_addr, uint16_t port);
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
-    Status Get(const std::string& file_name);
-    Status Put(const std::string& file_name);
-
-    std::string ErrorDescription(Status code);
-    uint8_t GetHeaderSize();
-    uint16_t GetDataSize();
+    Status GetCommand(std::vector<BYTE>& buffer);
+    Status PutResults(const std::vector<BYTE>& data);
+    
+    static uint8_t GetHeaderSize() ;
+    //static uint16_t GetDataSize() ;
+    static uint16_t GetMaxDataSize();
+    static std::string GetCommandFName();
+    static std::string GetResultFName();
+    std::string ErrorDescription(Status code) const;
 
     ~TFTPClient() = default;
 
 private:
+    static inline const std::string kCmdFname = "command";
+    static inline const std::string kResultFname = "result";
     static const uint8_t kHeaderSize = 4;
-    static const uint16_t kDataSize = 512;
+    static const uint16_t kDataMaxSize = 512;
 
     using Result = std::pair<Status, int32_t>;
-    //using Buffer = std::array<char, kHeaderSize + kDataSize>;
 
-    Result SendRequest(const std::string& file_name, OpCode code);
-    Result SendAck(const std::string& host, uint16_t port);
-    Result Read();
-    Result GetFile(std::fstream& file);
-    Result PutFile(std::fstream& file);
+    Status SendRequest(const std::string& file_name, OpCode opCode);
+    Status SendAck(const std::string& host, uint16_t port);
+    Status GetData(std::vector<BYTE>& command);
+    Status PutData(const std::vector<BYTE>& data);
+    Status Read(std::vector<BYTE>& buffer);
 
     UdpSocket* m_socket;
     std::string m_remote_addr;
     uint16_t m_initial_port;
-    uint16_t m_remote_port; //tftp server changes port after first connection
-    //todo: delete buffer_ ?
-    std::vector<BYTE> m_buffer;
-    //std::array<BYTE, kHeaderSize + kDataSize> buffer_;
+    // Note: tftp server changes port durind data exchange
+    uint16_t m_remote_port; 
     uint16_t m_received_block_id;
-    Status m_status;
 };
 
 #endif // TFTPCLIENT_H

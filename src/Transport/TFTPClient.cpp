@@ -7,16 +7,8 @@
 #include <fstream>
 #include <iostream>
 #include <format>
+#include <cassert>
 
-// TFTPClient::TFTPClient(const std::string &server_addr, uint16_t port)
-//     : m_remote_addr(server_addr)
-//     , m_initial_port(port)
-//     , m_remote_port(0)
-//     , m_received_block_id(0)
-// {
-//     m_socket = new UdpSocket();
-//     m_status = m_socket->Init() ? Status::kSuccess : Status::kInvalidSocket;
-// }
 
 TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t port)
     : m_socket(sock)
@@ -25,79 +17,69 @@ TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t
     , m_remote_port(0)
     , m_received_block_id(0)
 {
-    m_status = m_socket->IsInitialized() ? Status::kSuccess : Status::kInvalidSocket;
-    m_buffer.resize(kHeaderSize + kDataSize);
+    if (!m_socket->IsInitialized())
+    {
+        throw std::runtime_error("Invalid socket");
+    }
 }
 
-TFTPClient::Status TFTPClient::Get(const std::string &file_name)
+TFTPClient::Status TFTPClient::GetCommand(std::vector<BYTE>& buffer)
 {
-    if (m_status != Status::kSuccess) {
-        return m_status;
-    }
-
-    std::string out_fname = file_name + ".received";
-    std::fstream file(out_fname.c_str(), std::ios_base::out | std::ios_base::binary);
-    if (!file) {
-        LOG(ERROR) << std::format("Cant't open file {} for writing", out_fname);
-        return Status::kOpenFileError;
-    }
-
     // RRQ
-    Result result = this->SendRequest(file_name, OpCode::RRQ);
-    if (result.first != Status::kSuccess) {
-        return result.first;
+    Status status = SendRequest(kCmdFname, OpCode::RRQ);
+    if (status != Status::kSuccess) {
+        LOG(ERROR) <<  "GetCommand(): failed to send read request";
+        return status;
     }
+
     m_received_block_id = 0;
 
-    // FILE
-    result = this->GetFile(file);
-    if (result.first == Status::kSuccess) {
-        LOG(INFO) << std::format("{} bytes received", result.second);
+    // DATA
+    status = GetData(buffer);
+    if (status == Status::kSuccess) {
+        //if verbose
+        LOG(INFO) << std::format("GetCommand(): total {} bytes received", buffer.size());
     }
-    return result.first;
+    return status;
 }
 
-TFTPClient::Status TFTPClient::Put(const std::string &file_name)
+
+TFTPClient::Status TFTPClient::PutResults(const std::vector<BYTE>& data)
 {
-    if (m_status != Status::kSuccess) {
-        return m_status;
-    }
-
-    std::fstream file(file_name.c_str(), std::ios_base::in | std::ios_base::binary);
-    if (!file) {
-        LOG(ERROR) << std::format("Cant't open file {} for reading", file_name);
-        return Status::kOpenFileError;
-    }
-
-    // WRQ
-    Result result = this->SendRequest(file_name, OpCode::WRQ);
-    if (result.first != Status::kSuccess) {
-        return result.first;
+    // WRQ    
+    Status status = SendRequest(kResultFname, OpCode::WRQ);
+    if (status != Status::kSuccess) {
+        LOG(ERROR) <<  "PutResults(): failed to send write request";
+        return status;
     }
 
     m_received_block_id = 0;
 
     // ACK
-    result = this->Read();
-    if (result.first != Status::kSuccess) {
-        return result.first;
+    std::vector<BYTE> ack_buffer;
+    status = Read(ack_buffer);
+    if (status != Status::kSuccess) {
+        return status;
     }
 
-    // FILE
-    result = PutFile(file);
-    if (result.first == Status::kSuccess) {
-        LOG(INFO) << std::format("{} bytes written", result.second);
+    // DATA
+    status = PutData(data);
+    if (status == Status::kSuccess) {
+        //if verbose
+        LOG(INFO) << std::format("PutResults(): {} bytes written", data.size());
+
     }
-    return result.first;
+    return status;
 }
 
-std::string TFTPClient::ErrorDescription(TFTPClient::Status code)
+
+std::string TFTPClient::ErrorDescription(TFTPClient::Status code) const
 {
     switch (code) {
     case Status::kSuccess:
         return "Success";
     case Status::kInvalidSocket:
-        return "Invalid Socket error";
+        return "Socket is not initialized";
     case Status::kWriteError:
         return "Write Socket error";
     case Status::kReadError:
@@ -112,30 +94,33 @@ std::string TFTPClient::ErrorDescription(TFTPClient::Status code)
         return "Write File error";
     case Status::kReadFileError:
         return "Read File error";
+    case Status::kSendRequestError:
+        return "Send read/write request error";
     default:
         return "Unidentified error";
     }
 }
 
-TFTPClient::Result TFTPClient::SendRequest(const std::string& file_name, OpCode code)
+TFTPClient::Status TFTPClient::SendRequest(const std::string& file_name, OpCode opCode)
 {
     if (file_name.empty()) {
-        return std::make_pair(Status::kEmptyFilename, 0);
+        return Status::kEmptyFilename;
     }
 
-    RequestPacket request_packet(code, file_name, "octet");
+    RequestPacket request_packet(opCode, file_name, "octet");
     std::vector<BYTE> request_buffer = request_packet.ToBigEndianVector();
-    const ssize_t size = request_buffer.size();
 
     ssize_t written_bytes = m_socket->WriteDatagram(request_buffer, m_remote_addr, m_initial_port);
 
-    if (written_bytes != size) {
-        return std::make_pair(Status::kWriteError, written_bytes);
+    if (written_bytes != request_buffer.size()) {
+        LOG(ERROR) << "SendRequest(): incorrect amount of data transmitted";
+        return Status::kSendRequestError;
     }
-    return std::make_pair(Status::kSuccess, written_bytes);
+
+    return Status::kSuccess;
 }
 
-TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
+TFTPClient::Status TFTPClient::SendAck(const std::string& host, uint16_t port)
 {
     AckPacket ack_packet(m_received_block_id);
     std::vector<BYTE> ack_buffer = ack_packet.ToBigEndianVector();
@@ -144,154 +129,186 @@ TFTPClient::Result TFTPClient::SendAck(const std::string& host, uint16_t port)
     ssize_t bytes_written = m_socket->WriteDatagram(ack_buffer, host, port);
 
     if (bytes_written != size) {
-            return std::make_pair(Status::kWriteError, bytes_written);
+        LOG(ERROR) << "SendAck(): incorrect amount of data transmitted";
+        return Status::kWriteError;
     }
-    return std::make_pair(Status::kSuccess, bytes_written);
+    return Status::kSuccess;
 }
 
-TFTPClient::Result TFTPClient::Read()
+TFTPClient::Status TFTPClient::Read(std::vector<BYTE>& buffer)
 {
-    
+    const size_t max_packet_len = kHeaderSize + kDataMaxSize;
     ssize_t received_bytes = 
-        m_socket->ReadDatagram(m_buffer, m_remote_addr, &m_remote_port);
-    if (received_bytes == -1) {
-        LOG(ERROR) << "No data received";
-        return std::make_pair(Status::kReadError, received_bytes);
+        m_socket->ReadDatagram(buffer, max_packet_len, m_remote_addr, &m_remote_port);
+
+    if (received_bytes == -1) 
+    {
+        LOG(ERROR) << "Read(): no bytes received";
+        return Status::kReadError;
     }
-    // std::cout <<"tmp_buffer received:" << (int)tmp_buffer[0] 
-    //     << "," << (int)tmp_buffer[1] 
-    //     << "," << (int)tmp_buffer[2]
-    //     << "," << (int)tmp_buffer[3]
-    //     << std::endl
-    //     << "received_bytes:" << received_bytes 
-    //     << std::endl;
+    
+    if(buffer.size() < kHeaderSize)
+    {
+        LOG(ERROR) << "Read(): not enough bytes received";
+        return Status::kReadError;
+    }
 
-    //copy received datagram to m_buffer
-    //std::copy_n(tmp_buffer.begin(), received_bytes, m_buffer.begin());
-
-    LOG(DEBUG) << std::format("Buffer received: {} {} {} {}",
-                            (int)m_buffer[0],
-                            (int)m_buffer[1],
-                            (int)m_buffer[2],
-                            (int)m_buffer[3]);
+    // if verbose
+    LOG(DEBUG) << std::format("Header bytes received: {} {} {} {}",
+                            (int)buffer[0],
+                            (int)buffer[1],
+                            (int)buffer[2],
+                            (int)buffer[3]);
     
 
-    //add abstraction ?
-    OpCode code = static_cast<OpCode>(m_buffer[1]);
+    // add abstraction for buffer bytes ?
+    OpCode code = static_cast<OpCode>(buffer[1]);
     switch (code) {
-    case OpCode::DATA:
-        m_received_block_id = ((uint8_t)m_buffer[2] << 8) | (uint8_t)m_buffer[3];
-        return std::make_pair(Status::kSuccess, received_bytes - kHeaderSize);
-    case OpCode::ACK:
-        m_received_block_id = ((uint8_t)m_buffer[2] << 8) | (uint8_t)m_buffer[3];
-        return std::make_pair(Status::kSuccess, m_received_block_id);
-    case OpCode::ERR:
-        LOG(ERROR) << std::format("Message from remote host {:s}", (char*)&m_buffer[4]);
-        return std::make_pair(Status::kReadError, received_bytes);
-    default:
-        LOG(ERROR) << std::format("Unexpected packet received! Type: {}", (int)code);
-        return std::make_pair(Status::kUnexpectedPacketReceived, received_bytes);
+        case OpCode::DATA:
+            m_received_block_id = ((uint8_t)buffer[2] << 8) | (uint8_t)buffer[3];
+            return Status::kSuccess;
+        case OpCode::ACK:
+            m_received_block_id = ((uint8_t)buffer[2] << 8) | (uint8_t)buffer[3];
+            return Status::kSuccess;
+        case OpCode::ERR:
+            LOG(ERROR) << std::format("Read(): error message from remote host: {:s}", (char*)&buffer[4]);
+            return Status::kReadError;
+        default:
+            LOG(ERROR) << std::format("Read(): unexpected packet received. Type: {}", (int)code);
+            return Status::kUnexpectedPacketReceived;
     }
 }
 
-TFTPClient::Result TFTPClient::GetFile(std::fstream &file)
+TFTPClient::Status TFTPClient::GetData(std::vector<BYTE>& data)
 {
     uint16_t totalReceivedBlocks = 0;
     uint16_t receivedDataBytes = 0;
     unsigned long totalReceivedDataBytes = 0;
-    Result result;
+    Status status;
 
-    while (true) {
+    data.clear();
+    std::vector<BYTE> buffer;
+    do {
         // DATA
-        result = this->Read();
-        if (result.first != Status::kSuccess) {
-            LOG(ERROR) << "GetFile(): Read error";
-            return std::make_pair(result.first, totalReceivedDataBytes + std::max(result.second, 0));
+        status = Read(buffer);
+        if (status != Status::kSuccess) {
+            LOG(ERROR) << "GetData(): Read error";
+            return status;
         }
-        receivedDataBytes = result.second;
-        LOG(DEBUG) << std::format("receivedDataBytes: {}",receivedDataBytes);
-        LOG(DEBUG) << std::format("m_received_block_id: {}",m_received_block_id);
+        receivedDataBytes = buffer.size();
+        //if verbose
+        LOG(DEBUG) << std::format("GetData(): receivedDataBytes: {}", receivedDataBytes);
+        LOG(DEBUG) << std::format("GetData(): m_received_block_id: {}", m_received_block_id);
         
-        // write to file
+        // Save data to buffer
         if ((receivedDataBytes > 0) && (m_received_block_id > totalReceivedBlocks)) {
+
             ++totalReceivedBlocks;
             totalReceivedDataBytes += receivedDataBytes;
 
-            file.write((char*)&m_buffer[kHeaderSize], receivedDataBytes);
-            if (file.bad()) {
-                //std::cout << "file.bad." << std::endl;
-                return std::make_pair(Status::kWriteFileError, totalReceivedDataBytes);
-            }
+            data.insert(data.end(),
+                        buffer.begin() + kHeaderSize,
+                        buffer.end());
         }
 
         // ACK
-        result = this->SendAck(m_remote_addr.c_str(), m_remote_port);
-        if (result.first != Status::kSuccess) {
-            LOG(ERROR) << "GetFile(): SendAck failed";
-            return std::make_pair(result.first, totalReceivedDataBytes);
+        status = SendAck(m_remote_addr.c_str(), m_remote_port);
+        if (status != Status::kSuccess) {
+            LOG(ERROR) << "GetData(): SendAck failed";
+            return status;
         }
 
-        LOG(INFO) << std::format("{} bytes ({} blocks) received", 
+        LOG(DEBUG) << std::format("GetData(): {} bytes / {} blocks received", 
                                 totalReceivedDataBytes,
                                 totalReceivedBlocks);
 
-        if (receivedDataBytes != kDataSize) {
-            break;
-        }
-    }
-    return std::make_pair(Status::kSuccess, totalReceivedDataBytes);
+
+    } while(receivedDataBytes == kHeaderSize + kDataMaxSize);
+    
+    return Status::kSuccess;
 }
 
-TFTPClient::Result TFTPClient::PutFile(std::fstream &file)
+TFTPClient::Status TFTPClient::PutData(const std::vector<BYTE>& data)
 {
-    Result result;
+    //Result result;
+    Status status;
     uint16_t current_block_id = 0;
-    unsigned long total_written_bytes = 0;
+    size_t datachunk_size;
+    size_t written_bytes = 0;
+    std::vector<BYTE> buffer;
 
     while (true) {
-        //can be false?
+        LOG(DEBUG) << std::format("PutData(): current_block_id:{}, m_received_block_id: {}", 
+                                current_block_id,
+                                m_received_block_id);
+
+        // if true => read next chunk of data to buffer, otherwise resend buffer
         if (current_block_id == m_received_block_id) {
-            if (file.eof()) {
-                return std::make_pair(Status::kSuccess, total_written_bytes);
-            }
-            ++current_block_id;
-      
-            std::vector<BYTE> payload(kDataSize);
-            file.read((char*)&payload[0], kDataSize);
-            if (file.bad()) {
-                return std::make_pair(Status::kReadFileError, total_written_bytes);
+            size_t remaining_bytes = data.size() - written_bytes;
+            // All bytes are sent
+            if(remaining_bytes < 1){
+                return Status::kSuccess;
             }
 
-            m_buffer = DataPacket(current_block_id, payload).ToBigEndianVector();
+            current_block_id++;
+            datachunk_size = remaining_bytes < kDataMaxSize ? remaining_bytes : kDataMaxSize;
+            // Extract next chunk for sending
+            std::vector<BYTE> payload(data.begin() + written_bytes,
+                                      data.begin() + written_bytes + datachunk_size);                    
+            
+            buffer = DataPacket(current_block_id, payload).ToBigEndianVector();
+            written_bytes += datachunk_size;
         }
-        ssize_t written_bytes = file.gcount();
+
         // Send DATA
-        ssize_t packet_size = kHeaderSize + written_bytes;
-        ssize_t sent_bytes = m_socket->WriteDatagram(m_buffer, m_remote_addr, m_remote_port);
+        ssize_t packet_size = kHeaderSize + datachunk_size;
+        ssize_t sent_bytes = m_socket->WriteDatagram(buffer, m_remote_addr, m_remote_port);
         if (sent_bytes != packet_size) {
-            return std::make_pair(Status::kWriteError, total_written_bytes + sent_bytes);
-        }
-        // ACK
-        result = this->Read();
-        if (result.first != Status::kSuccess) {
-            return std::make_pair(result.first, total_written_bytes + packet_size);
+            // if verbose
+            LOG(ERROR) << "PutData(): Send DATA failed";
+            return Status::kWriteError;
         }
 
-        total_written_bytes += written_bytes;
-        LOG(INFO) << std::format("{} bytes ({} blocks) written", 
-                                total_written_bytes,
+        // ACK
+        std::vector<BYTE> ack_buffer;
+        status = Read(ack_buffer);
+        if (status != Status::kSuccess) {
+            // if verbose
+            LOG(ERROR) << "PutData(): failed to read ack";
+            return status;
+        }
+
+        // if verbose
+        LOG(INFO) << std::format("PutData(): {} bytes ({} blocks) written", 
+                                written_bytes,
                                 current_block_id);
     }
 }
 
-uint8_t TFTPClient::GetHeaderSize()
+
+
+uint8_t TFTPClient::GetHeaderSize() 
 {
     return kHeaderSize; 
 }
 
-uint16_t TFTPClient::GetDataSize()
+uint16_t TFTPClient::GetMaxDataSize() 
 {
-    return kDataSize; 
+    return kDataMaxSize; 
+}
+
+//uint16_t TFTPClient::GetDataSize()
+//{
+//    return kDataMaxSize;
+//}
+
+std::string  TFTPClient::GetCommandFName() 
+{
+    return kCmdFname;
+}
+std::string  TFTPClient::GetResultFName() 
+{
+    return kResultFname;
 }
 
 // TFTPClient::~TFTPClient()

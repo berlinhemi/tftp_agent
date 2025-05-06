@@ -1,14 +1,15 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/src/agent",
-            "args": ["192.168.136.129", "get" ,"data"],
+            "program": "${workspaceFolder}/build/src/Agent",
+            "args": ["192.168.192.129", "put" ,"data"],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}/build/src",
             "environment": [],
             "externalConsole": false,
             "miDebuggerPath": "/usr/bin/gdb",
