@@ -36,15 +36,10 @@ public:
     bool IsInitialized();
 
     //virtual ssize_t ReadDatagram(char *data, size_t max_len, char *host = nullptr, uint16_t *port = nullptr);
-<<<<<<< HEAD
-    virtual ssize_t ReadDatagram( //BYTE* buffer,
-        std::vector<BYTE>& data, 
-        //size_t max_len,
-=======
+
     virtual ssize_t ReadDatagram(
         std::vector<BYTE>& buffer, 
         size_t max_len,
->>>>>>> origin/dev
         std::string& host,
         uint16_t* port);
         

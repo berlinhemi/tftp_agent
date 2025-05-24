@@ -96,17 +96,7 @@ void UdpSocket::Abort()
     }
 }
 
-<<<<<<< HEAD
-ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& data, 
-    //BYTE* data, 
-    //size_t max_len, 
-     std::string& host, uint16_t* port)
-{
-    if ( m_socket < 0 || data.capacity() < 1 )
-    {
-    //data.size() < max_len) {
-        return 0;
-=======
+
 ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& buffer, 
                                 size_t max_len, 
                                 std::string& host, 
@@ -118,26 +108,21 @@ ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& buffer,
     // Set buffer size if it too small
     if(buffer.size() < max_len){
         buffer.resize(max_len);
->>>>>>> origin/dev
+
     }
     
     struct sockaddr_in remote_addr;
     socklen_t remote_addr_len = sizeof(struct sockaddr_in);
     memset(&remote_addr, '\0', sizeof(remote_addr));
 
-<<<<<<< HEAD
-    const ssize_t size =  recvfrom(m_socket
-                                    ,&data[0], data.capacity()
-                                    ,MSG_WAITFORONE // blocking operation! Use MSG_DONTWAIT for non blocking
-                                    ,(struct sockaddr *)&remote_addr, &remote_addr_len);
-=======
+
     const ssize_t size =  recvfrom(m_socket,
                                 &buffer[0],
                                 max_len,
                                 MSG_WAITFORONE, // blocking operation! Use MSG_DONTWAIT for non blocking
                                 (struct sockaddr *)&remote_addr,
                                 &remote_addr_len);
->>>>>>> origin/dev
+
     if (size > 0) {
 
         host = inet_ntoa(remote_addr.sin_addr);
@@ -152,13 +137,10 @@ ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& buffer,
 }
 
 
-<<<<<<< HEAD
-int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,/*size_t data_len,*/  const std::string& host, uint16_t port)
-=======
+
 int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,
                                 const std::string& host, 
                                 uint16_t port)
->>>>>>> origin/dev
 {
     if (data.empty() || m_socket < 0) {
         return 0;
@@ -177,13 +159,9 @@ int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,
     memset(remote_addr.sin_zero, '\0', sizeof(remote_addr.sin_zero));
 
     const ssize_t size = sendto(m_socket
-<<<<<<< HEAD
-                                ,&data[0], data.size()
-                                 //,data, data_len
-=======
+
                                 ,&data[0],
                                  data.size()
->>>>>>> origin/dev
                                 ,MSG_DONTWAIT
                                 ,(struct sockaddr*)&remote_addr, sizeof(remote_addr));
 
