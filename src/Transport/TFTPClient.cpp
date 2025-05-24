@@ -23,10 +23,10 @@ TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t
     }
 }
 
-TFTPClient::Status TFTPClient::Get(std::vector<BYTE>& buffer)
+TFTPClient::Status TFTPClient::Get(std::vector<BYTE>& buffer, const std::string& fname)
 {
     // RRQ
-    Status status = SendRequest(kDownloadedFname, OpCode::RRQ);
+    Status status = SendRequest(fname, OpCode::RRQ);
     if (status != Status::kSuccess) {
         LOG(ERROR) <<  "Get(): failed to send read request";
         return status;
@@ -44,10 +44,10 @@ TFTPClient::Status TFTPClient::Get(std::vector<BYTE>& buffer)
 }
 
 
-TFTPClient::Status TFTPClient::Put(const std::vector<BYTE>& data)
+TFTPClient::Status TFTPClient::Put(const std::vector<BYTE>& data, const std::string& fname)
 {
     // WRQ    
-    Status status = SendRequest(kUploadedFname, OpCode::WRQ);
+    Status status = SendRequest(fname, OpCode::WRQ);
     if (status != Status::kSuccess) {
         LOG(ERROR) <<  "Put(): failed to send write request";
         return status;
@@ -278,7 +278,7 @@ TFTPClient::Status TFTPClient::PutData(const std::vector<BYTE>& data)
         }
 
         // if verbose
-        LOG(INFO) << std::format("PutData(): {} bytes ({} blocks) written", 
+        LOG(DEBUG) << std::format("PutData(): {} bytes ({} blocks) written", 
                                 written_bytes,
                                 current_block_id);
     }
@@ -297,12 +297,13 @@ uint16_t TFTPClient::GetMaxDataSize()
 }
 
 
-std::string  TFTPClient::GetDownloadedFName() 
+std::string  TFTPClient::GetDownloadedDefaultFName() 
 {
-    return kDownloadedFname;
+    return kDownloadedDefaultFname;
 }
-std::string  TFTPClient::GetUploadedFName() 
+
+std::string  TFTPClient::GetUploadedDefaultFName() 
 {
-    return kUploadedFname;
+    return kUploadedDefaultFname;
 }
 

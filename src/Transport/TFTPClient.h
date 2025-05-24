@@ -29,22 +29,29 @@ public:
         kSendRequestError
     };
 
+    enum class RequestType
+    {
+        GET = 0,
+        PUT,
+        UNKNOWN
+    };
+
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
-    Status Get(std::vector<BYTE>& buffer);
-    Status Put(const std::vector<BYTE>& data);
+    Status Get(std::vector<BYTE>& buffer, const std::string& fname);
+    Status Put(const std::vector<BYTE>& data, const std::string& fname);
     
     static uint8_t GetHeaderSize() ;
     static uint16_t GetMaxDataSize();
-    static std::string GetDownloadedFName();
-    static std::string GetUploadedFName();
+    static std::string GetDownloadedDefaultFName();
+    static std::string GetUploadedDefaultFName();
     std::string ErrorDescription(Status code) const;
 
     ~TFTPClient() = default;
 
 private:
-    static inline const std::string kDownloadedFname = "input";
-    static inline const std::string kUploadedFname = "output";
+    static inline const std::string kDownloadedDefaultFname = "input";
+    static inline const std::string kUploadedDefaultFname = "output";
     static const uint8_t kHeaderSize = 4;
     static const uint16_t kDataMaxSize = 512;
 

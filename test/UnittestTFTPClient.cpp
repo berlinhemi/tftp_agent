@@ -102,14 +102,14 @@ protected:
 TEST_F(TFTPClientTest, GetCommand_SendRequestReturnsError_Failed)
 {
     // ReadRequest packet
-    std::string fname = TFTPClient::GetDownloadedFName();
+    std::string fname = TFTPClient::GetDownloadedDefaultFName();
     std::vector<BYTE> req = CreateRequest(fname, OpCode::RRQ);
     
     EXPECT_CALL(m_mock_socket, WriteDatagram(req, m_server_addr, m_port))
             .WillOnce(Return(0));
     // Call method
     std::vector<BYTE> buffer;
-    EXPECT_EQ(m_tftp_client->Get(buffer), TFTPClient::Status::kSendRequestError);
+    EXPECT_EQ(m_tftp_client->Get(buffer, fname), TFTPClient::Status::kSendRequestError);
 }
 
 
@@ -133,7 +133,8 @@ TEST_F(TFTPClientTest, GetCommand_ReadDataSmallerThanMaxDataSize_Success)
     // Set expectations
     InSequence s;
     // Send read request
-    ssize_t RRQ_packet_size = 2 +  TFTPClient::GetDownloadedFName().size() + 1 + strlen("octet") + 1 ;
+    const std::string fname = TFTPClient::GetDownloadedDefaultFName();
+    ssize_t RRQ_packet_size = 2 + fname.size() + 1 + strlen("octet") + 1;
     EXPECT_CALL(m_mock_socket, WriteDatagram(_, m_server_addr, m_port)).WillOnce(Return(RRQ_packet_size));
     // Read data in one packet
     std::vector expected_data = ReadAllBinaryData(input_fname);
@@ -155,7 +156,7 @@ TEST_F(TFTPClientTest, GetCommand_ReadDataSmallerThanMaxDataSize_Success)
     
     // Call method
     std::vector<BYTE> buffer;
-    EXPECT_EQ(m_tftp_client->Get(buffer), TFTPClient::Status::kSuccess);
+    EXPECT_EQ(m_tftp_client->Get(buffer, fname), TFTPClient::Status::kSuccess);
     // Check results
     EXPECT_EQ(buffer, expected_data);
 }
@@ -173,7 +174,8 @@ TEST_F(TFTPClientTest, GetCommand_Read2000Bytes_Success)
     ASSERT_EQ(file_size, 2000) << "Filesize of " << input_fname << "is not 2000 bytes.";
 
     // Read request
-    ssize_t RRQ_packet_size = 2 + TFTPClient::GetDownloadedFName().size() + 1 + strlen("octet") + 1 ;
+    const std::string fname = TFTPClient::GetDownloadedDefaultFName();
+    ssize_t RRQ_packet_size = 2 + fname.size() + 1 + strlen("octet") + 1 ;
     EXPECT_CALL(m_mock_socket, WriteDatagram(_, m_server_addr, m_port)).WillOnce(Return(RRQ_packet_size));
 
     
@@ -210,7 +212,7 @@ TEST_F(TFTPClientTest, GetCommand_Read2000Bytes_Success)
 
     // Call method
     std::vector<BYTE> buffer;
-    EXPECT_EQ(m_tftp_client->Get(buffer), TFTPClient::Status::kSuccess);
+    EXPECT_EQ(m_tftp_client->Get(buffer, fname), TFTPClient::Status::kSuccess);
     // Check results
     std::vector<BYTE> expected_data = ReadAllBinaryData(input_fname);
     EXPECT_EQ(buffer, expected_data);
@@ -225,7 +227,7 @@ TEST_F(TFTPClientTest, GetCommand_Read2000Bytes_Success)
 TEST_F(TFTPClientTest, PutResults_SendRequestReturnsError_Failed)
 {
     // WriteRequest packet
-    std::string fname = TFTPClient::GetUploadedFName();
+    std::string fname = TFTPClient::GetUploadedDefaultFName();
     std::vector<BYTE> req = CreateRequest(fname, OpCode::WRQ);
   
     EXPECT_CALL(m_mock_socket, WriteDatagram(req, m_server_addr, m_port))
@@ -233,7 +235,7 @@ TEST_F(TFTPClientTest, PutResults_SendRequestReturnsError_Failed)
     
     // Call method
     std::vector<BYTE> buffer {1, 2, 3};
-    EXPECT_EQ(m_tftp_client->Put(buffer), TFTPClient::Status::kSendRequestError);
+    EXPECT_EQ(m_tftp_client->Put(buffer, fname), TFTPClient::Status::kSendRequestError);
 }
 
 /*
@@ -257,7 +259,8 @@ TEST_F(TFTPClientTest, PutResults_SendDataSmallerThanMaxDataSize_Success)
     InSequence s;
 
     // Send write request
-    ssize_t WRQ_packet_size = 2 +  TFTPClient::GetUploadedFName().size() + 1 + strlen("octet") + 1 ;
+    const std::string uploadFName = TFTPClient::GetUploadedDefaultFName();
+    ssize_t WRQ_packet_size = 2 +  uploadFName.size() + 1 + strlen("octet") + 1 ;
     EXPECT_CALL(m_mock_socket, WriteDatagram(_, m_server_addr, m_port)).WillOnce(Return(WRQ_packet_size));
     
     // Read ACK #1
@@ -286,7 +289,7 @@ TEST_F(TFTPClientTest, PutResults_SendDataSmallerThanMaxDataSize_Success)
             ));
 
     // Call method
-    EXPECT_EQ(m_tftp_client->Put(data_bytes), TFTPClient::Status::kSuccess);
+    EXPECT_EQ(m_tftp_client->Put(data_bytes, uploadFName), TFTPClient::Status::kSuccess);
 }
 
 
@@ -308,7 +311,8 @@ TEST_F(TFTPClientTest, PutResults_Send2000Bytes_Success)
     InSequence s;
     
     // Send write request
-    ssize_t WRQ_packet_size = 2 +  TFTPClient::GetUploadedFName().size() + 1 + strlen("octet") + 1 ;
+    const std::string uploadFName = TFTPClient::GetUploadedDefaultFName();
+    ssize_t WRQ_packet_size = 2 +  uploadFName.size() + 1 + strlen("octet") + 1 ;
     EXPECT_CALL(m_mock_socket, WriteDatagram(_, m_server_addr, m_port)).WillOnce(Return(WRQ_packet_size));
     
     uint16_t block_id = 0;
@@ -351,7 +355,7 @@ TEST_F(TFTPClientTest, PutResults_Send2000Bytes_Success)
 
     // Call method
     std::vector<BYTE> data_bytes = ReadAllBinaryData(input_fname);
-    EXPECT_EQ(m_tftp_client->Put(data_bytes), TFTPClient::Status::kSuccess);
+    EXPECT_EQ(m_tftp_client->Put(data_bytes, uploadFName), TFTPClient::Status::kSuccess);
 }
 
 

@@ -1,4 +1,7 @@
+
+#include "ArgParser.h"
 #include "TFTPClient.h"
+
 #include <algorithm>
 #include <chrono>
 #include <format>
@@ -8,12 +11,16 @@
 // Define it only once in project
 INITIALIZE_EASYLOGGINGPP 
 
-void show_help(const std::string program_name)
+void ShowHelp(const std::string program_name)
 {
-    std::cout << format("nTFTP Client\n"
-        "Usage:   {0} HOST [get | put] \n"  
-        "Examples:\n\t{0} 192.168.1.104 get \n"
-        "\t{0} server.com put \n"
+    std::cout << format("\nTFTP Agent\n"
+        "Usage:   {0} -h HOST -o OPERATION [-f FNAME] \n"  
+        "\t-h: hostname\n"
+        "\t-o: operation\n"
+        "\t-f: filename (optional). Default filename for get is 'input', for put is 'output'\n"
+        "Examples:\n"
+        "\t{0} -h 192.168.1.104 -o get \n"
+        "\t{0} -h server.com -o put -f result\n"
         , program_name);
     
 }
@@ -39,38 +46,66 @@ int main(int argc, char **argv)
     // // Disable all levels below Info (this will disable Debug)
     // defaultLogger->configure(el::Level::Debug, el::ConfigurationType::Enabled, "false");
     
-    el::Configurations defaultConf;
-    defaultConf.setToDefault();
-    //  defaultConf.set(el::Level::Info, el::ConfigurationType::Enabled, "true");
-    defaultConf.set(el::Level::Debug, el::ConfigurationType::Enabled, "false");
+    el::Configurations defaul_conf;
+    defaul_conf.setToDefault();
+    defaul_conf.set(el::Level::Info, el::ConfigurationType::Enabled, "true");
+    defaul_conf.set(el::Level::Debug, el::ConfigurationType::Enabled, "false");
     
-    el::Loggers::reconfigureLogger("default", defaultConf);
+    el::Loggers::reconfigureLogger("default", defaul_conf);
     el::Loggers::reconfigureLogger("default", el::ConfigurationType::Format, "[%level] %msg");
     el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
 
 
-    LOG(INFO) << "INFO";
-    LOG(ERROR) << "ERROR";
-    LOG(DEBUG) << "DEBUG";
+    // LOG(INFO) << "INFO enabled";
+    // LOG(ERROR) << "ERROR enabled";
+    // LOG(DEBUG) << "DEBUG enabled";
     
-    if (argc < 3) {
-        show_help(argv[0]);
-        return 1;
+    ArgParser arg_parser(argc, argv);
+    if(!arg_parser.cmdOptionExists("-h"))
+    {
+        LOG(ERROR) << "Option -h not found";
+        ShowHelp(argv[0]);
+        return -1;
+    }
+    if(!arg_parser.cmdOptionExists("-o"))
+    {
+        LOG(ERROR) << "Option -o not found";
+        ShowHelp(argv[0]);
+        return -1;
     }
 
     const uint16_t port = 69;
-    std::string host(argv[1]);
-    std::string operation(argv[2]);
-
-    
-    std::transform(operation.begin(), operation.end(), operation.begin(),
-                   [](unsigned char c){ return std::tolower(c); });
-
-    const int opCode = operation.compare("get") == 0 ? 1 : (operation.compare("put") == 0 ? 2 : 0);
-    if (opCode == 0) {
-        show_help(argv[0]);
-        return 1;
+    std::string host = arg_parser.getCmdOption("-h");
+    std::string operation = arg_parser.getCmdOption("-o");
+    TFTPClient::RequestType request_type;
+    if(operation == "get")
+    {
+        request_type = TFTPClient::RequestType::GET;
     }
+    else if (operation == "put")
+    {
+        request_type = TFTPClient::RequestType::PUT;
+    }
+    else
+    {
+        LOG(ERROR) << "Unknow operation";
+        ShowHelp(argv[0]);
+        return -1;
+    }
+
+    std::string fname;
+    if(arg_parser.cmdOptionExists("-f"))
+    {
+        fname = arg_parser.getCmdOption("-f");
+    }
+    else
+    {
+        LOG(INFO) << "Using default file name";
+        fname = (operation == "get") ?
+         TFTPClient::GetDownloadedDefaultFName() 
+         : TFTPClient::GetUploadedDefaultFName();
+    }
+    
 
     LOG(INFO) << std::format("Start TFTP Client {}:{}", host.c_str(), port);
 
@@ -80,22 +115,22 @@ int main(int argc, char **argv)
     std::vector<BYTE> command;
     //const auto begin = std::chrono::steady_clock::now();
     TFTPClient::Status status;
-    if (opCode == 1){
-        status = client.Get(command); 
+    if (request_type == TFTPClient::RequestType::GET)
+    {
+        status = client.Get(command, fname); 
         std::ostringstream oss;
-        LOG(INFO) << "command size:" << command.size();
+        LOG(INFO) << "Command size:" << command.size();
         oss << "GetCommand result: ";
         for (auto e : command){
             oss << e << " ";
         }
         LOG(INFO) << oss.str();
     }
-
-    
-    if (opCode == 2){
-        // Some data
+    else if (request_type == TFTPClient::RequestType::PUT)
+    {
+        // Test data
         std::vector<BYTE> data(2000, '1');
-        status = client.Put(data);
+        status = client.Put(data, fname);
     }
   
     
