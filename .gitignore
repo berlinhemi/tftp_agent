@@ -404,3 +404,4 @@ build/*
 !CMakeLists.txt
 Testing/*
 dummy
+*.received

@@ -20,19 +20,25 @@ public:
     
     DataPacket() = default;
 
-    DataPacket(uint16_t block_id, const std::vector<BYTE>& buffer ): block_id(block_id)
+
+    DataPacket(uint16_t block_id, const std::vector<BYTE>& payload ): block_id(block_id)
     {
-        if(buffer.size() > kMaxDataSize)
+        if(payload.size() > kMaxDataSize)
         {
-            throw std::length_error("Too big data chunk.");
+            throw std::invalid_argument("Too big payload buffer.");
         }
-        data.assign(buffer.begin(), buffer.end());
+        data.assign(payload.begin(), payload.end());
     }
 
-    void InitFromBigEndianVector(std::vector<BYTE> buffer)
+    bool InitFromBigEndianVector(std::vector<BYTE> buffer)
     {
+        if(buffer.size() > kMaxDataSize + kMaxDataSize)
+        {
+            return false;
+        }
         block_id = (buffer[2] << 8) | buffer[3] ;
         data.assign(buffer.begin() + kHeaderSize, buffer.end());
+        return true;
     }
 
     std::vector<BYTE> ToBigEndianVector()
@@ -42,8 +48,14 @@ public:
         buffer.push_back(m_opcode);
         buffer.push_back((uint16_t)(block_id >> 8));
         buffer.push_back((uint16_t)(block_id & 0x00FF));
-        std::copy(data.begin(), data.end(), std::back_inserter(data));
+
+        std::copy(data.begin(), data.end(), std::back_inserter(buffer));
         return buffer;
+    }
+
+    uint16_t PacketSize()
+    {
+        return static_cast<uint16_t>(data.size()) + kHeaderSize;
     }
 private:
     static const uint16_t kMaxDataSize = 512;
