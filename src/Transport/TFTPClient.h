@@ -4,20 +4,12 @@
 #include "UDPSocket/UDPSocket.h"
 #include "TFTPPacketTypes.h"
 
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/dev
 #include <netinet/in.h>
 
 #include <array>
 #include <string>
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/dev
 typedef unsigned char BYTE;
 
 class TFTPClient
@@ -33,20 +25,6 @@ public:
         kEmptyFilename,
         kOpenFileError,
         kWriteFileError,
-<<<<<<< HEAD
-        kReadFileError
-    };
-
-    //TFTPClient(const std::string& server_addr, uint16_t port);
-    TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
-
-    Status Get(const std::string& file_name);
-    Status Put(const std::string& file_name);
-
-    std::string ErrorDescription(Status code);
-    uint8_t GetHeaderSize();
-    uint16_t GetDataSize();
-=======
         kReadFileError,
         kSendRequestError
     };
@@ -68,8 +46,6 @@ public:
     static std::string GetDownloadedDefaultFName();
     static std::string GetUploadedDefaultFName();
     std::string ErrorDescription(Status code) const;
->>>>>>> origin/dev
-
     ~TFTPClient() = default;
 
 private:
