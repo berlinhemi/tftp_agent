@@ -24,6 +24,8 @@
 - add UdpSocket statuses (?)
 - m_received_block_id processing ?
 - add coverage
+- run clang-tidy
+- add json-config
 
 
 -  **...**: ...
