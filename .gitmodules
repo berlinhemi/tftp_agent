@@ -4,3 +4,6 @@
 [submodule "thirdparty/easyloggingpp"]
 	path = thirdparty/easyloggingpp
 	url = https://github.com/abumq/easyloggingpp
+[submodule "thirdparty/zlib"]
+	path = thirdparty/zlib
+	url = https://github.com/madler/zlib.git

@@ -7,7 +7,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/src/Agent",
-            "args": ["192.168.192.129", "put" ,"data"],
+            "args": ["-h", "192.168.192.129", "-o", "get" , "-f", "results"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/src",
             "environment": [],
