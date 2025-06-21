@@ -9,6 +9,8 @@
 #include <sstream>
 
 #include "easylogging++.h"
+#include "easylogging++.cc"
+
 // Define it only once in project
 INITIALIZE_EASYLOGGINGPP 
 

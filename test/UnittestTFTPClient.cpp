@@ -11,6 +11,7 @@
 #include <gmock/gmock.h>
 
 #include "easylogging++.h"
+#include "easylogging++.cc"
 
 using ::testing::_;
 using ::testing::SetArgReferee;

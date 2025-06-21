@@ -405,3 +405,4 @@ build/*
 Testing/*
 dummy
 *.received
+CMakeUserPresets.json
