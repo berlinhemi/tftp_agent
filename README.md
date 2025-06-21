@@ -26,6 +26,8 @@
 - add coverage
 - run clang-tidy
 - add json-config
++ add conan instead git submodules
++ add build instructions
 
 
 -  **...**: ...
