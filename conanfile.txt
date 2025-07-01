@@ -1,8 +1,11 @@
 [requires]
 # If you want to mix submodules with Conan dependencies
-zlib/1.2.13
-openssl/3.1.4
+zlib/1.3.1
+openssl/3.5.0
 
 [generators]
 CMakeDeps
 CMakeToolchain
+
+[layout]
+cmake_layout
