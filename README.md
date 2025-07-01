@@ -13,6 +13,13 @@
 - execute commands
 - send results to tftp server
 
+## Build
+* `conan install . --output-folder=build --build=missing`
+* `cd build`
+* `cmake --preset conan-release ..`
+* `cd build/Release`
+* `make`
+
 ### TODO: 
 ~ refactor according GStyle and CppGuide
 + bind() is not called: fix bug
