@@ -133,7 +133,7 @@ ssize_t UdpSocket::ReadDatagram(std::vector<BYTE>& buffer,
 }
 
 
-int64_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,
+ssize_t UdpSocket::WriteDatagram(const std::vector<BYTE>& data,
                                 const std::string& host, 
                                 uint16_t port)
 {
