@@ -16,8 +16,8 @@
 ## Build
 * `conan install . --output-folder=build --build=missing`
 * `cd build`
-* `cmake --preset conan-release ..`
-* `cd build/Release`
+* `cmake --preset conan-debug  ..`
+* `cd build/Debug`
 * `make`
 
 ### TODO: 
