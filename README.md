@@ -13,11 +13,15 @@
 - execute commands
 - send results to tftp server
 
+## Dependencies
+openssl >= 3.0.0
+
 ## Build
-* `conan install . --output-folder=build --build=missing`
-* `cd build`
+*  Make sure that your conan profile contains Debug build type
+* `mkdir build && cd build`
+* `conan install ..  --build=missing`
 * `cmake --preset conan-debug  ..`
-* `cd build/Debug`
+* `cd Debug`
 * `make`
 
 ### TODO: 
