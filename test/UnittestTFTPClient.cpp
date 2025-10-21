@@ -42,9 +42,14 @@ protected:
 
     void SetUp()
     {
-        el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "[%level] %msg");
-        el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "false");
-        el::Loggers::setVerboseLevel(3);
+        el::Configurations defaul_conf;
+        defaul_conf.setToDefault();
+        defaul_conf.set(el::Level::Info, el::ConfigurationType::Enabled, "true");
+        defaul_conf.set(el::Level::Debug, el::ConfigurationType::Enabled, "false");
+        
+        el::Loggers::reconfigureLogger("default", defaul_conf);
+        el::Loggers::reconfigureLogger("default", el::ConfigurationType::Format, "[%level] %msg");
+        el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
 
         m_tftp_client = std::make_unique<TFTPClient>(&m_mock_socket, m_server_addr, m_port);
         m_header_size = TFTPClient::GetHeaderSize();
