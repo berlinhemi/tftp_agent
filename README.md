@@ -21,24 +21,18 @@ openssl >= 3.0.0
 * `mkdir build && cd build`
 * `conan install ..  --build=missing`
 * `cmake --preset conan-debug  ..`
-* `cd Debug`
-* `make`
+* `cd Debug && make`
 
 ### TODO: 
 ~ refactor according GStyle and CppGuide
-+ bind() is not called: fix bug
 - add const to some methods
 - check arguments
-+ add logging system
-- configure logging verbosity
 - add doxygen comments (?)
 - add UdpSocket statuses (?)
 - m_received_block_id processing ?
 - add coverage
 - run clang-tidy
 - add json-config
-+ add conan instead git submodules
-+ add build instructions
 
 
 -  **...**: ...
