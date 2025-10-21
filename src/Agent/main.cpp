@@ -17,13 +17,13 @@ INITIALIZE_EASYLOGGINGPP
 static void ShowHelp(const std::string program_name)
 {
     std::cout << format("\nTFTP Agent\n"
-        "Usage:   {0} -h HOST -o OPERATION [-f FNAME] \n"  
-        "\t-h: hostname\n"
+        "Usage:   {0} -h SERVER -o OPERATION [-f FNAME] \n"  
+        "\t-s: hostname\n"
         "\t-o: operation\n"
         "\t-f: filename (optional). Default filename for GET is 'input', for PUT is 'output'\n"
         "Examples:\n"
-        "\t{0} -h 192.168.1.104 -o get \n"
-        "\t{0} -h server.com -o put -f result\n"
+        "\t{0} -s 192.168.1.104 -o get \n"
+        "\t{0} -s server.com -o put -f result\n"
         , program_name);
     
 }
@@ -44,37 +44,32 @@ int main(int argc, char **argv)
 {
 
     ConfigureLogger();
-    
-    ArgParser arg_parser(argc, argv);
-    if(!arg_parser.cmdOptionExists("-h"))
-    {
-        LOG(ERROR) << "Option -h not found";
+    if(argc == 1)
         ShowHelp(argv[0]);
+
+    ArgParser arg_parser(argc, argv);
+    if(!arg_parser.cmdOptionExists("-h")){
+        LOG(ERROR) << "Option -s not found";
         return -1;
     }
-    if(!arg_parser.cmdOptionExists("-o"))
-    {
+    if(!arg_parser.cmdOptionExists("-o")){
         LOG(ERROR) << "Option -o not found";
-        ShowHelp(argv[0]);
         return -1;
     }
 
     const uint16_t port = 69;
-    std::string host = arg_parser.getCmdOption("-h");
+    std::string host = arg_parser.getCmdOption("-s");
     std::string operation = arg_parser.getCmdOption("-o");
     TFTPClient::RequestType request_type;
-    if(operation == "get")
-    {
+
+    if(operation == "get"){
         request_type = TFTPClient::RequestType::GET;
     }
-    else if (operation == "put")
-    {
+    else if (operation == "put"){
         request_type = TFTPClient::RequestType::PUT;
     }
-    else
-    {
+    else{
         LOG(ERROR) << "Unknow operation";
-        ShowHelp(argv[0]);
         return -1;
     }
 
