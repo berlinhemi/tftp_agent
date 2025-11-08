@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         ShowHelp(argv[0]);
 
     ArgParser arg_parser(argc, argv);
-    if(!arg_parser.cmdOptionExists("-h")){
+    if(!arg_parser.cmdOptionExists("-s")){
         LOG(ERROR) << "Option -s not found";
         return -1;
     }
@@ -99,20 +99,20 @@ int main(int argc, char **argv)
     {
         std::vector<BYTE> command;
         status = client.Get(command, fname); 
-        std::vector<BYTE> unpacked =  packer.Unpack(command);
+        std::vector<BYTE> unpacked = packer.Unpack(command);
         std::ostringstream oss;
         LOG(INFO) << "Command size:" << unpacked.size();
         oss << "GetCommand result: ";
         for (auto e : unpacked){
-            oss << e << " ";
+            oss << e;
         }
         LOG(INFO) << oss.str();
     }
     else if (request_type == TFTPClient::RequestType::PUT)
     {
-        // Test data
-        
-        std::vector<BYTE> data(2000, '1');
+        // Some test data
+        std::string command = "cat /etc/passwd | grep root";
+        std::vector<BYTE> data(command.begin(), command.end());
         std::vector<BYTE> packed_data = packer.Pack(data);
         status = client.Put(packed_data, fname);
     }

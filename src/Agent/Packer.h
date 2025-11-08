@@ -25,7 +25,4 @@ private:
 };
 
 
-
-
-
 #endif // AGENT_PACKER_H
