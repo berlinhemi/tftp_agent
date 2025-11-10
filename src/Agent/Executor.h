@@ -11,12 +11,15 @@ class Executor
 {
 public:
     Executor();
-    bool Execute(const std::vector<BYTE>& command);
-    //std::vector<BYTE> Pack(const std::vector<BYTE>& buffer);
-    //std::vector<BYTE> Unpack(const std::vector<BYTE>& buffer);
-    
+    bool Execute(const std::vector<BYTE>& command); // better string, then someone convert to bytes if need it 
+   
 private:
 
+    struct CommandResult {
+        std::string output;
+        std::string error;
+        int exitCode;
+    };
     std::vector<BYTE> stdout_buff;
     std::vector<BYTE> stderr_buff;
 };
