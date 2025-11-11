@@ -3,48 +3,56 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-bool Executor::Execute(const std::vector<BYTE>& command)
+
+std::optional<CommandResult> Executor::Execute(const std::string& command)
 {
-    std::string command_str (command.begin(), command.end());
     CommandResult result;
     
     int stdoutPipe[2];
     int stderrPipe[2];
-    pipe(stdoutPipe);
-    pipe(stderrPipe);
-    
+    if(pipe(stdoutPipe) == -1 ||  pipe(stderrPipe) == -1);
+        return std::nullopt; 
+   
     pid_t pid = fork();
     
+    if (pid == -1) {
+        close(stdoutPipe[0]); close(stdoutPipe[1]);
+        close(stderrPipe[0]); close(stderrPipe[1]);
+        return std::nullopt;  // fork error
+    }
+
     if (pid == 0) {
-        // Дочерний процесс
+        // child
         close(stdoutPipe[0]);
         close(stderrPipe[0]);
         
-        // Перенаправляем stdout и stderr
+        // redirect stdout/err to pipes
         dup2(stdoutPipe[1], STDOUT_FILENO);
         dup2(stderrPipe[1], STDERR_FILENO);
         
+        // close orginal pipes
         close(stdoutPipe[1]);
         close(stderrPipe[1]);
         
-        // Выполняем команду через shell
-        execl("/bin/sh", "sh", "-c", command_str.c_str(), NULL);
-        exit(EXIT_FAILURE);
-    } else {
-        // Родительский процесс
+        // change currect process to shell
+        execl("/bin/sh", "sh", "-c", command.c_str(), NULL);
+        exit(EXECL_FAILURE);
+    } 
+    else {
+        // parent
         close(stdoutPipe[1]);
         close(stderrPipe[1]);
         
         char buffer[256];
         ssize_t count;
         
-        // Читаем stdout
+        // read stdout
         while ((count = read(stdoutPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
             result.output += buffer;
         }
         
-        // Читаем stderr
+        // read stderr
         while ((count = read(stderrPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
             result.error += buffer;
@@ -53,11 +61,26 @@ bool Executor::Execute(const std::vector<BYTE>& command)
         close(stdoutPipe[0]);
         close(stderrPipe[0]);
         
-        // Ждем завершения дочернего процесса
         int status;
-        waitpid(pid, &status, 0);
-        result.exitCode = WEXITSTATUS(status);
+        // WARNING: blocking waiting
+        if (waitpid(pid, &status, 0) == -1) {
+            return std::nullopt; // waitpid failed
+        }
+
+        if (WIFEXITED(status)) {
+            result.exitCode = WEXITSTATUS(status);
+            if (result.exitCode == EXECL_FAILURE) {
+                // execl error
+                return std::nullopt;  
+            }
+        } 
+        else {
+            // killed, stopped, ...
+            return std::nullopt; 
+        }
+
+        return result;
     }
     
-    return result;
+    
 }
