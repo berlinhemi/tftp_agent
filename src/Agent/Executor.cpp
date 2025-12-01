@@ -14,15 +14,17 @@ std::optional<CommandResult> Executor::Execute(const std::string& command)
         return std::nullopt; 
    
     pid_t pid = fork();
-    
+
     if (pid == -1) {
-        close(stdoutPipe[0]); close(stdoutPipe[1]);
-        close(stderrPipe[0]); close(stderrPipe[1]);
+        close(stdoutPipe[0]); 
+        close(stdoutPipe[1]);
+        close(stderrPipe[0]);
+        close(stderrPipe[1]);
         return std::nullopt;  // fork error
     }
 
     if (pid == 0) {
-        // child
+        // child proc
         close(stdoutPipe[0]);
         close(stderrPipe[0]);
         
@@ -39,7 +41,7 @@ std::optional<CommandResult> Executor::Execute(const std::string& command)
         exit(EXECL_FAILURE);
     } 
     else {
-        // parent
+        // parent proc
         close(stdoutPipe[1]);
         close(stderrPipe[1]);
         
@@ -81,6 +83,4 @@ std::optional<CommandResult> Executor::Execute(const std::string& command)
 
         return result;
     }
-    
-    
 }
