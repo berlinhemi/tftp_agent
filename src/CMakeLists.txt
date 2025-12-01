@@ -8,6 +8,7 @@ include_directories(Transport
 
 add_executable (Agent
                 Agent/main.cpp
+                Agent/Executor.cpp
                 Agent/Packer.cpp
                 Transport/UDPSocket/UDPSocket.cpp
                 Transport/TFTPClient.cpp
