@@ -10,7 +10,7 @@ std::optional<CommandResult> Executor::Execute(const std::string& command)
     
     int stdoutPipe[2];
     int stderrPipe[2];
-    if(pipe(stdoutPipe) == -1 ||  pipe(stderrPipe) == -1);
+    if(pipe(stdoutPipe) == -1 ||  pipe(stderrPipe) == -1)
         return std::nullopt; 
    
     pid_t pid = fork();
