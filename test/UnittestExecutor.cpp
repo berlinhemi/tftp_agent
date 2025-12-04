@@ -1,4 +1,4 @@
-#include "Executor.h"
+#include "Agent/Executor.h"
 
 #include <cstring>
 #include <fstream>
@@ -26,9 +26,9 @@ INITIALIZE_EASYLOGGINGPP
 
 class AgentExecutorTest : public testing::Test
 {
+
 protected:
   
-    // ...
     void SetUp()
     {
         el::Configurations defaul_conf;
@@ -39,7 +39,6 @@ protected:
         el::Loggers::reconfigureLogger("default", defaul_conf);
         el::Loggers::reconfigureLogger("default", el::ConfigurationType::Format, "[%level] %msg");
         el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
-
      
     }
 
@@ -47,3 +46,31 @@ protected:
 
    
 };
+
+
+/*
+    @brief Test of Execute method
+            when command is empty
+*/
+TEST_F(AgentExecutorTest, Execute_EmptyCommand_ExitSuccessNoOutput)
+{
+    std::string command = "";
+    std::optional<CommandResult>  result = Executor::Execute(command);
+    ASSERT_TRUE(result.has_value());
+   
+    std::cout << result.value().output << std::endl;
+    std::cout << result.value().error << std::endl;
+    EXPECT_EQ(result.value().output, std::string());
+    EXPECT_EQ(result.value().error, std::string());
+    EXPECT_EQ(result.value().exitCode, EXIT_SUCCESS);
+
+}
+
+
+
+int main(int argc, char** argv)
+{   
+    ::testing::InitGoogleTest(&argc, argv);
+    ::testing::InitGoogleMock(&argc, argv);
+    return RUN_ALL_TESTS();
+}
