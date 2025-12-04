@@ -8,25 +8,36 @@ include_directories(${CMAKE_SOURCE_DIR}/thirdparty/easyloggingpp/src)
 
 
 #include_directories()
-include_directories(${PROJECT_SOURCE_DIR}/src/Transport)
+include_directories(${PROJECT_SOURCE_DIR}/src)
+#include_directories(${PROJECT_SOURCE_DIR}/src/Transport)
 #include_directories(${PROJECT_SOURCE_DIR}/src/transport/udp_socket)
 
 file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
 
 #add_executable(runUnitTests ${TEST_SRC_FILES})
 add_executable(TFTPCliTest UnittestTFTPClient.cpp)
+add_executable(AgentExecutorTest UnittestExecutor.cpp)
 #message(TEST_SRC_FILES="${TEST_SRC_FILES}")
 #target_link_libraries(TFTPCliTest udp_socket tftp_client gtest gmock easylogging)
 target_link_libraries(TFTPCliTest 
                         udp_socket
                         tftp_client
                         gtest
-                        gmock
-                      )
-                        #easyloggingpp::easyloggingpp)
+                        gmock)
+
+target_link_libraries(AgentExecutorTest 
+                      executor
+                      gtest
+                      gmock)
+        #easyloggingpp::easyloggingpp)
 # target_link_libraries(tftp_cli_test gtest gmock udp_socket tftp_client ?gtest_main?)
 
 add_test(NAME TFTPCliTest
         COMMAND TFTPCliTest
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+
+add_test(NAME AgentExecutorTest
+        COMMAND AgentExecutorTest
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
