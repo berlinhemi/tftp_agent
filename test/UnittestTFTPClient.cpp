@@ -1,5 +1,5 @@
-#include "TFTPClient.h"
-#include "TFTPPacketTypes.h"
+#include "Transport/TFTPClient.h"
+#include "Transport/TFTPPacketTypes.h"
 #include "mock/MockUdpSocket.h"
 
 #include <cstring>
