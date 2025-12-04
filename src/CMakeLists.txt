@@ -26,3 +26,4 @@ target_link_libraries(Agent PRIVATE
 #add_library(easylogging ${CMAKE_SOURCE_DIR}/thirdparty/easyloggingpp/src/easylogging++.cc)
 add_library(udp_socket Transport/UDPSocket/UDPSocket.cpp)
 add_library(tftp_client Transport/TFTPClient.cpp)
+add_library(executor Agent/Executor.cpp)
