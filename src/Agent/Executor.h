@@ -35,9 +35,9 @@ struct CommandResult {
 class Executor
 {
 public:
-    static std::optional<CommandResult> Execute(const std::string& command); 
-private:
-    static const int EXECL_FAILURE = 150;
+    static CommandResult Execute(const std::string& command); 
+//private:
+//    static const int EXECL_FAILURE = 150;
 };
 
 

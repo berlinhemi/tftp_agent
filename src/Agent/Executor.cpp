@@ -4,14 +4,17 @@
 #include <sys/wait.h>
 
 
-std::optional<CommandResult> Executor::Execute(const std::string& command)
+CommandResult Executor::Execute(const std::string& command)
 {
     CommandResult result;
     
     int stdoutPipe[2];
     int stderrPipe[2];
     if(pipe(stdoutPipe) == -1 ||  pipe(stderrPipe) == -1)
-        return std::nullopt; 
+    {
+        result.exitCode =  ExecStatus::PipeFailed;
+        return result;
+    }
    
     pid_t pid = fork();
 
@@ -20,7 +23,8 @@ std::optional<CommandResult> Executor::Execute(const std::string& command)
         close(stdoutPipe[1]);
         close(stderrPipe[0]);
         close(stderrPipe[1]);
-        return std::nullopt;  // fork error
+        result.exitCode =  ExecStatus::ForkFailed;
+        return result;
     }
 
     if (pid == 0) {
@@ -38,7 +42,7 @@ std::optional<CommandResult> Executor::Execute(const std::string& command)
         
         // change currect process to shell
         execl("/bin/sh", "sh", "-c", command.c_str(), NULL);
-        exit(EXECL_FAILURE);
+        exit(static_cast<int>(ExecStatus::ExeclFailed));
     } 
     else {
         // parent proc
@@ -66,19 +70,27 @@ std::optional<CommandResult> Executor::Execute(const std::string& command)
         int status;
         // WARNING: blocking waiting
         if (waitpid(pid, &status, 0) == -1) {
-            return std::nullopt; // waitpid failed
+            result.exitCode =  ExecStatus::WaitFailed;
+            return result;
         }
 
         if (WIFEXITED(status)) {
-            result.exitCode = WEXITSTATUS(status);
-            if (result.exitCode == EXECL_FAILURE) {
-                // execl error
-                return std::nullopt;  
-            }
+            int exit_code = WEXITSTATUS(status);
+            result.exitCode = static_cast<ExecStatus>(exit_code);
+            
         } 
+        else if (WIFSIGNALED(status)) {
+            // Killed by signal
+            result.exitCode = ExecStatus::ChildSignaled;
+            // if need signal id:
+            // int signal_num = WTERMSIG(status);
+        }
+        else if (WIFSTOPPED(status)) {
+            // Stopped (rarely)
+            result.exitCode = ExecStatus::ChildStopped;
+        }
         else {
-            // killed, stopped, ...
-            return std::nullopt; 
+            result.exitCode = ExecStatus::UnknownError;
         }
 
         return result;
