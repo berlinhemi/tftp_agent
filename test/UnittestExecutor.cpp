@@ -41,10 +41,19 @@ protected:
         el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
      
     }
-
     void TearDown() {}
 
-   
+    // Helper
+    bool CaseInsensitiveContains(const std::string& str, const std::string& substr) {
+        auto it = std::search(
+            str.begin(), str.end(),
+            substr.begin(), substr.end(),
+            [](char ch1, char ch2) {
+                return std::toupper(ch1) == std::toupper(ch2);
+            }
+        );
+        return it != str.end();
+    }
 };
 
 
@@ -54,16 +63,31 @@ protected:
 */
 TEST_F(AgentExecutorTest, Execute_EmptyCommand_ExitSuccessNoOutput)
 {
+    // no command
     std::string command = "";
-    std::optional<CommandResult>  result = Executor::Execute(command);
-    ASSERT_TRUE(result.has_value());
+    CommandResult result = Executor::Execute(command);
    
-    std::cout << result.value().output << std::endl;
-    std::cout << result.value().error << std::endl;
-    EXPECT_EQ(result.value().output, std::string());
-    EXPECT_EQ(result.value().error, std::string());
-    EXPECT_EQ(result.value().exitCode, EXIT_SUCCESS);
+    std::cout << result.output << std::endl;
+    std::cout << result.error << std::endl;
+    EXPECT_EQ(result.output, std::string());
+    EXPECT_EQ(result.error, std::string());
+    EXPECT_EQ(result.exitCode, ExecStatus::Success);
+}
 
+/*
+    @brief Test of Execute method
+            when command is non-existing script/binary
+*/
+TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_NotFound)
+{
+    std::string command = "invalid_name";
+    CommandResult result = Executor::Execute(command);
+   
+    std::cout << result.output << std::endl;
+    std::cout << result.error << std::endl;
+    EXPECT_EQ(result.output, std::string());
+    EXPECT_TRUE(CaseInsensitiveContains(result.error, "not found"));
+    EXPECT_EQ(result.exitCode, ExecStatus::CommandNotFound);
 }
 
 
