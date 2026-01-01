@@ -4,3 +4,6 @@ mock example: https://pro-prof.com/forums/topic/mock-объекты-в-google-c-
 GTEST:
     GMOCK: do not compare addresses! (char*, int*, etc)
     need to switch char* to string (to compare strings) and char*,size to vector??? (to compare buffers)
+ERRORS:
+ if you have message "/lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.32' not found"
+    then make link: sudo ln -sf /usr/local/lib64/libstdc++.so.6.0.32 /lib/x86_64-linux-gnu/libstdc++.so.6
