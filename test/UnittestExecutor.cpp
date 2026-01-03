@@ -4,6 +4,8 @@
 #include <fstream>
 #include <filesystem>
 #include <memory>
+#include <sys/resource.h>  
+#include <fcntl.h> 
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -66,9 +68,7 @@ TEST_F(AgentExecutorTest, Execute_EmptyCommand_ExitSuccessNoOutput)
     // no command
     std::string command = "";
     CommandResult result = Executor::Execute(command);
-   
-    std::cout << result.output << std::endl;
-    std::cout << result.error << std::endl;
+
     EXPECT_EQ(result.output, std::string());
     EXPECT_EQ(result.error, std::string());
     EXPECT_EQ(result.exitCode, ExecStatus::Success);
@@ -82,12 +82,48 @@ TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_NotFound)
 {
     std::string command = "invalid_name";
     CommandResult result = Executor::Execute(command);
-   
-    std::cout << result.output << std::endl;
-    std::cout << result.error << std::endl;
+
     EXPECT_EQ(result.output, std::string());
     EXPECT_TRUE(CaseInsensitiveContains(result.error, "not found"));
     EXPECT_EQ(result.exitCode, ExecStatus::CommandNotFound);
+}
+
+
+TEST_F(AgentExecutorTest, Execute_PipeFails_Simple) {
+    // Save current limits
+    struct rlimit old_limit;
+    getrlimit(RLIMIT_NOFILE, &old_limit);
+    
+    // Try to set limit 0
+    struct rlimit new_limit = {0, 0};
+    if (setrlimit(RLIMIT_NOFILE, &new_limit) == 0) {
+        CommandResult result = Executor::Execute("echo test");
+        
+        EXPECT_EQ(result.exitCode, ExecStatus::PipeFailed);
+        EXPECT_TRUE(result.output.empty());
+        EXPECT_TRUE(result.error.empty());
+        
+        // Restore limits
+        setrlimit(RLIMIT_NOFILE, &old_limit);
+    } else {
+        // Skip if limits cant be set to zero
+        GTEST_SKIP() << "Test requires ability to set rlimit (run as root?)";
+    }
+}
+
+
+/*
+    @brief Test of Execute method
+            when command is valid but parameter is not valid
+*/
+TEST_F(AgentExecutorTest, Execute_ValidCommandInvalidParameter_NotSuccessful)
+{
+    std::string command = "ls -l /path/not/exist";
+    CommandResult result = Executor::Execute(command);
+
+    EXPECT_EQ(result.output, std::string());
+    EXPECT_TRUE(CaseInsensitiveContains(result.error, "no such file"));
+    EXPECT_NE(result.exitCode, ExecStatus::Success);
 }
 
 
