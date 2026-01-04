@@ -63,7 +63,7 @@ protected:
     @brief Test of Execute method
             when command is empty
 */
-TEST_F(AgentExecutorTest, Execute_EmptyCommand_ExitSuccessNoOutput)
+TEST_F(AgentExecutorTest, Execute_EmptyCommand_SuccessNoOutput)
 {
     // no command
     std::string command = "";
@@ -78,7 +78,7 @@ TEST_F(AgentExecutorTest, Execute_EmptyCommand_ExitSuccessNoOutput)
     @brief Test of Execute method
             when command is non-existing script/binary
 */
-TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_NotFound)
+TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_ErrorNotFound)
 {
     std::string command = "invalid_name";
     CommandResult result = Executor::Execute(command);
@@ -89,7 +89,11 @@ TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_NotFound)
 }
 
 
-TEST_F(AgentExecutorTest, Execute_PipeFails_Simple) {
+/*
+    @brief Test of Execute method
+        when pipi() failed since limit of file descriptors is 0
+*/
+TEST_F(AgentExecutorTest, Execute_FileLimitExceed_PipeError) {
     // Save current limits
     struct rlimit old_limit;
     getrlimit(RLIMIT_NOFILE, &old_limit);
@@ -111,12 +115,11 @@ TEST_F(AgentExecutorTest, Execute_PipeFails_Simple) {
     }
 }
 
-
 /*
     @brief Test of Execute method
-            when command is valid but parameter is not valid
+        when command is valid but parameter is not valid
 */
-TEST_F(AgentExecutorTest, Execute_ValidCommandInvalidParameter_NotSuccessful)
+TEST_F(AgentExecutorTest, Execute_lsCommandInvalidParameter_Error)
 {
     std::string command = "ls -l /path/not/exist";
     CommandResult result = Executor::Execute(command);
@@ -124,6 +127,58 @@ TEST_F(AgentExecutorTest, Execute_ValidCommandInvalidParameter_NotSuccessful)
     EXPECT_EQ(result.output, std::string());
     EXPECT_TRUE(CaseInsensitiveContains(result.error, "no such file"));
     EXPECT_NE(result.exitCode, ExecStatus::Success);
+}
+
+/*
+    @brief Test of Execute method
+        when command is valid and some stdout expected
+*/
+TEST_F(AgentExecutorTest, Execute_lsCommandValidParameter_Success)
+{
+    std::string command = "ls -l /";
+    CommandResult result = Executor::Execute(command);
+
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, "etc"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, "bin"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, "boot"));
+    EXPECT_EQ(result.exitCode, ExecStatus::Success);
+}
+
+/*
+    @brief Test of Execute method
+        when command is valid and some stdout expected
+*/
+TEST_F(AgentExecutorTest, Execute_touchCommand_SuccessNoOutput)
+{
+    std::string tmp_file = "/tmp/test.file";
+    std::string command = "touch ";
+    command += tmp_file;
+    CommandResult result = Executor::Execute(command);
+
+    EXPECT_EQ(result.output, std::string());
+    EXPECT_EQ(result.error, std::string());
+    EXPECT_TRUE(std::filesystem::exists(tmp_file));
+    EXPECT_TRUE(std::filesystem::remove(tmp_file));
+    EXPECT_EQ(result.exitCode, ExecStatus::Success);
+}
+
+/*
+    @brief Test of Execute method
+        when command contains base64 decoding
+        and saving results to file
+*/
+TEST_F(AgentExecutorTest, Execute_decodeB64AndSaveToFile_SuccessNoOutput)
+{
+    // std::string tmp_file = "/tmp/test.file";
+    // std::string command = "touch ";
+    // command += tmp_file;
+    // CommandResult result = Executor::Execute(command);
+
+    // EXPECT_EQ(result.output, std::string());
+    // EXPECT_EQ(result.error, std::string());
+    // EXPECT_TRUE(std::filesystem::exists(tmp_file));
+    // EXPECT_TRUE(std::filesystem::remove(tmp_file));
+    // EXPECT_EQ(result.exitCode, ExecStatus::Success);
 }
 
 
