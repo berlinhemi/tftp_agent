@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "Base64.h"
 
 #include "easylogging++.h"
 #include "easylogging++.cc"
@@ -167,18 +168,29 @@ TEST_F(AgentExecutorTest, Execute_touchCommand_SuccessNoOutput)
         when command contains base64 decoding
         and saving results to file
 */
-TEST_F(AgentExecutorTest, Execute_decodeB64AndSaveToFile_SuccessNoOutput)
+TEST_F(AgentExecutorTest, Execute_SaveToFileDecodedB64Data_SuccessNoOutput)
 {
-    // std::string tmp_file = "/tmp/test.file";
-    // std::string command = "touch ";
-    // command += tmp_file;
-    // CommandResult result = Executor::Execute(command);
+    std::string test_message = "test message for encoding";
+    Base64 encoder(test_message, Base64::TextEncode);
+    
+    std::string tmp_file = "/tmp/test.file";
+    std::string command = "echo \"";
+    command += encoder.encode();
+    command += "\" | base64 -d > ";
+    command += tmp_file;
+    CommandResult result = Executor::Execute(command);
+    std::cout << command << std::endl;
 
-    // EXPECT_EQ(result.output, std::string());
-    // EXPECT_EQ(result.error, std::string());
-    // EXPECT_TRUE(std::filesystem::exists(tmp_file));
-    // EXPECT_TRUE(std::filesystem::remove(tmp_file));
-    // EXPECT_EQ(result.exitCode, ExecStatus::Success);
+    //std::cout << test.encode();
+    EXPECT_EQ(result.output, std::string());
+    EXPECT_EQ(result.error, std::string());
+    EXPECT_TRUE(std::filesystem::exists(tmp_file));
+    std::ifstream ifs(tmp_file);
+    std::string decoded_message;
+    ifs >> decoded_message;
+    EXPECT_EQ(test_message, decoded_message);
+    EXPECT_TRUE(std::filesystem::remove(tmp_file));
+    EXPECT_EQ(result.exitCode, ExecStatus::Success);
 }
 
 
