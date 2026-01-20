@@ -1,4 +1,4 @@
-#include "base64.h"
+#include "Base64.h"
 
 unsigned char* Base64::decode(string output_file)
 {
