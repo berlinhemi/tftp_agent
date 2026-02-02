@@ -92,29 +92,35 @@ TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_ErrorNotFound)
 
 /*
     @brief Test of Execute method
-        when pipi() failed since limit of file descriptors is 0
+        when pipe() failed since limit of file descriptors is 0
 */
+
+
 TEST_F(AgentExecutorTest, Execute_FileLimitExceed_PipeError) {
     // Save current limits
     struct rlimit old_limit;
     getrlimit(RLIMIT_NOFILE, &old_limit);
     
-    // Try to set limit 0
-    struct rlimit new_limit = {0, 0};
+    // Set new limit, but do not change hard limit 
+    // so we could restore it
+    struct rlimit new_limit = {0, old_limit.rlim_max};  
+    
     if (setrlimit(RLIMIT_NOFILE, &new_limit) == 0) {
         CommandResult result = Executor::Execute("echo test");
         
         EXPECT_EQ(result.exitCode, ExecStatus::PipeFailed);
         EXPECT_TRUE(result.output.empty());
         EXPECT_TRUE(result.error.empty());
-        
-        // Restore limits
-        setrlimit(RLIMIT_NOFILE, &old_limit);
+                
+        if (setrlimit(RLIMIT_NOFILE, &old_limit) == -1) {
+            std::cout << "restore failed: " << strerror(errno) << std::endl;
+        }
     } else {
-        // Skip if limits cant be set to zero
-        GTEST_SKIP() << "Test requires ability to set rlimit (run as root?)";
+        // Skip if limits cant be set
+        GTEST_SKIP() << "setrlimit failed, error: " << strerror(errno);
     }
 }
+
 
 /*
     @brief Test of Execute method
@@ -122,10 +128,18 @@ TEST_F(AgentExecutorTest, Execute_FileLimitExceed_PipeError) {
 */
 TEST_F(AgentExecutorTest, Execute_lsCommandInvalidParameter_Error)
 {
+    struct rlimit current;
+    getrlimit(RLIMIT_NOFILE, &current);
+    // std::cout << "Current NOFILE limits: soft=" << current.rlim_cur 
+    //           << ", hard=" << current.rlim_max << std::endl;
+
     std::string command = "ls -l /path/not/exist";
     CommandResult result = Executor::Execute(command);
 
     EXPECT_EQ(result.output, std::string());
+    std::cout << result.output << std::endl;
+    std::cout << result.error << std::endl;
+    std::cout << (int)result.exitCode << std::endl;
     EXPECT_TRUE(CaseInsensitiveContains(result.error, "no such file"));
     EXPECT_NE(result.exitCode, ExecStatus::Success);
 }
