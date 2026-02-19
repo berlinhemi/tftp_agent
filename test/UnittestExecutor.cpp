@@ -94,15 +94,13 @@ TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_ErrorNotFound)
     @brief Test of Execute method
         when pipe() failed since limit of file descriptors is 0
 */
-
-
 TEST_F(AgentExecutorTest, Execute_FileLimitExceed_PipeError) {
     // Save current limits
     struct rlimit old_limit;
     getrlimit(RLIMIT_NOFILE, &old_limit);
     
     // Set new limit, but do not change hard limit 
-    // so we could restore it
+    // so we could restore it as any user
     struct rlimit new_limit = {0, old_limit.rlim_max};  
     
     if (setrlimit(RLIMIT_NOFILE, &new_limit) == 0) {
@@ -177,6 +175,7 @@ TEST_F(AgentExecutorTest, Execute_touchCommand_SuccessNoOutput)
     EXPECT_EQ(result.exitCode, ExecStatus::Success);
 }
 
+
 /*
     @brief Test of Execute method
         when command contains base64 decoding
@@ -201,7 +200,12 @@ TEST_F(AgentExecutorTest, Execute_SaveToFileDecodedB64Data_SuccessNoOutput)
     EXPECT_TRUE(std::filesystem::exists(tmp_file));
     std::ifstream ifs(tmp_file);
     std::string decoded_message;
-    ifs >> decoded_message;
+    if (ifs) {
+        decoded_message.assign(std::istreambuf_iterator<char>(ifs),
+                           std::istreambuf_iterator<char>());
+        ifs.close();
+    }   
+
     EXPECT_EQ(test_message, decoded_message);
     EXPECT_TRUE(std::filesystem::remove(tmp_file));
     EXPECT_EQ(result.exitCode, ExecStatus::Success);
