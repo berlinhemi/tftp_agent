@@ -1,4 +1,5 @@
 #include "Executor.h"
+#include "easylogging++.h"
 
 #include <unistd.h>
 #include <sys/wait.h>
@@ -17,7 +18,7 @@ CommandResult Executor::Execute(const std::string& command)
     }
    
     pid_t pid = fork();
-
+    
     if (pid == -1) {
         close(stdoutPipe[0]); 
         close(stdoutPipe[1]);
@@ -41,6 +42,7 @@ CommandResult Executor::Execute(const std::string& command)
         close(stderrPipe[1]);
         
         // change currect process to shell
+        //LOG(INFO) << "Executing: " << command.c_str();
         execl("/bin/sh", "sh", "-c", command.c_str(), NULL);
         exit(static_cast<int>(ExecStatus::ExeclFailed));
     } 
