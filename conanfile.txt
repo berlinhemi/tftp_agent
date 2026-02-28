@@ -1,6 +1,10 @@
 [requires]
 zlib/1.3.1
-openssl/3.5.0
+openssl/3.4.1
+
+[options]
+openssl/*:no_threads=True
+openssl/*:no_fips=True
 
 [generators]
 CMakeDeps
