@@ -73,11 +73,13 @@ CommandResult Executor::Execute(const std::string& command)
         // WARNING: blocking waiting
         if (waitpid(pid, &status, 0) == -1) {
             result.exitCode =  ExecStatus::WaitFailed;
+            std::cout << "failed\n";
             return result;
         }
 
         if (WIFEXITED(status)) {
             int exit_code = WEXITSTATUS(status);
+            std::cout << "WIFEXITED OK:" << exit_code << "\n";
             result.exitCode = static_cast<ExecStatus>(exit_code);
             
         } 

@@ -12,6 +12,7 @@ enum class ExecStatus {
     Success = 0,
     CommandNotFound = 127,
     PermissionDenied = 126,
+    SigTerminated = 143,
     
     // Custom codes
     ForkFailed = 200,
