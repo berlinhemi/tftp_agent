@@ -135,9 +135,9 @@ TEST_F(AgentExecutorTest, Execute_lsCommandInvalidParameter_Error)
     CommandResult result = Executor::Execute(command);
 
     EXPECT_EQ(result.output, std::string());
-    std::cout << result.output << std::endl;
-    std::cout << result.error << std::endl;
-    std::cout << (int)result.exitCode << std::endl;
+    // std::cout << result.output << std::endl;
+    // std::cout << result.error << std::endl;
+    // std::cout << (int)result.exitCode << std::endl;
     EXPECT_TRUE(CaseInsensitiveContains(result.error, "no such file"));
     EXPECT_NE(result.exitCode, ExecStatus::Success);
 }
@@ -181,7 +181,7 @@ TEST_F(AgentExecutorTest, Execute_touchCommand_SuccessNoOutput)
         when command contains base64 decoding
         and saving results to file
 */
-TEST_F(AgentExecutorTest, Execute_SaveToFileDecodedB64Data_SuccessNoOutput)
+TEST_F(AgentExecutorTest, Execute_SaveToFileB64Data_SuccessNoOutput)
 {
     std::string test_message = "test message for encoding";
     Base64 encoder(test_message, Base64::TextEncode);
@@ -192,7 +192,7 @@ TEST_F(AgentExecutorTest, Execute_SaveToFileDecodedB64Data_SuccessNoOutput)
     command += "\" | base64 -d > ";
     command += tmp_file;
     CommandResult result = Executor::Execute(command);
-    std::cout << command << std::endl;
+    // std::cout << command << std::endl;
 
     //std::cout << test.encode();
     EXPECT_EQ(result.output, std::string());
@@ -211,6 +211,28 @@ TEST_F(AgentExecutorTest, Execute_SaveToFileDecodedB64Data_SuccessNoOutput)
     EXPECT_EQ(result.exitCode, ExecStatus::Success);
 }
 
+
+/*
+    @brief Test of Execute method
+        when ... 
+*/
+TEST_F(AgentExecutorTest, Execute_Ping)
+{
+    std::string command = "ping 8.8.8.8";
+       
+    CommandResult result = Executor::Execute(command);
+    // std::cout << command << std::endl;
+    sleep(3);
+    system("pkill ping");
+
+    //std::cout << test.encode();
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, "ping"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, "bytes of data"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.error, "terminate"));
+    
+    
+    EXPECT_EQ(result.exitCode, ExecStatus::SigTerminated);
+}
 
 
 int main(int argc, char** argv)
