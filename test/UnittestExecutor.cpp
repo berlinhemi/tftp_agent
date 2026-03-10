@@ -233,6 +233,25 @@ TEST_F(AgentExecutorTest, Execute_ShortPing_Success)
 }
 
 
+/*
+    @brief Test of Execute method
+        when ping is unlimited and have to be terminated after timeout
+*/
+TEST_F(AgentExecutorTest, Execute_UnlimitedPing_Success)
+{
+    std::string host = "8.8.8.8";
+    std::string command = "ping " + host;
+       
+    CommandResult result = Executor::Execute(command, kTestTimeoutSec);
+    
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, "ping"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, std::string("bytes from ") + host));
+    EXPECT_TRUE(result.error.empty());
+    
+    EXPECT_EQ(result.exitCode, ExecStatus::SigTerminated);
+}
+
+
 int main(int argc, char** argv)
 {   
     ::testing::InitGoogleTest(&argc, argv);
