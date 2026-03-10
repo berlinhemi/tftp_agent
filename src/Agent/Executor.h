@@ -21,6 +21,7 @@ enum class ExecStatus {
     ExeclFailed = 203,
     ChildSignaled = 204,
     ChildStopped = 205,
+    Timeout = 206,
     
     // General errors
     UnknownError = 300
@@ -36,7 +37,7 @@ struct CommandResult {
 class Executor
 {
 public:
-    static CommandResult Execute(const std::string& command); 
+    static CommandResult Execute(const std::string& command,  int timeoutSeconds = 600); 
 //private:
 //    static const int EXECL_FAILURE = 150;
 };
