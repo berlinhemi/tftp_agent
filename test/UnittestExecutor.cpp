@@ -216,12 +216,12 @@ TEST_F(AgentExecutorTest, Execute_SaveToFileB64Data_SuccessNoOutput)
 
 /*
     @brief Test of Execute method
-        when ... 
+        when ping is limited to 2 packets
 */
 TEST_F(AgentExecutorTest, Execute_ShortPing_Success)
 {
     std::string host = "8.8.8.8";
-    std::string command = "ping " + host;
+    std::string command = "ping -c 2 " + host;
        
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
     
@@ -229,7 +229,7 @@ TEST_F(AgentExecutorTest, Execute_ShortPing_Success)
     EXPECT_TRUE(CaseInsensitiveContains(result.output, std::string("bytes from ") + host));
     EXPECT_TRUE(result.error.empty());
     
-    EXPECT_EQ(result.exitCode, ExecStatus::SigTerminated);
+    EXPECT_EQ(result.exitCode, ExecStatus::Success);
 }
 
 
