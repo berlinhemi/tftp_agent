@@ -57,6 +57,8 @@ protected:
         );
         return it != str.end();
     }
+
+    static const int kTestTimeoutSec = 10;
 };
 
 
@@ -68,7 +70,7 @@ TEST_F(AgentExecutorTest, Execute_EmptyCommand_SuccessNoOutput)
 {
     // no command
     std::string command = "";
-    CommandResult result = Executor::Execute(command);
+    CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
     EXPECT_EQ(result.output, std::string());
     EXPECT_EQ(result.error, std::string());
@@ -82,7 +84,7 @@ TEST_F(AgentExecutorTest, Execute_EmptyCommand_SuccessNoOutput)
 TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_ErrorNotFound)
 {
     std::string command = "invalid_name";
-    CommandResult result = Executor::Execute(command);
+    CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
     EXPECT_EQ(result.output, std::string());
     EXPECT_TRUE(CaseInsensitiveContains(result.error, "not found"));
@@ -104,7 +106,7 @@ TEST_F(AgentExecutorTest, Execute_FileLimitExceed_PipeError) {
     struct rlimit new_limit = {0, old_limit.rlim_max};  
     
     if (setrlimit(RLIMIT_NOFILE, &new_limit) == 0) {
-        CommandResult result = Executor::Execute("echo test");
+        CommandResult result = Executor::Execute("echo test", kTestTimeoutSec);
         
         EXPECT_EQ(result.exitCode, ExecStatus::PipeFailed);
         EXPECT_TRUE(result.output.empty());
@@ -132,7 +134,7 @@ TEST_F(AgentExecutorTest, Execute_lsCommandInvalidParameter_Error)
     //           << ", hard=" << current.rlim_max << std::endl;
 
     std::string command = "ls -l /path/not/exist";
-    CommandResult result = Executor::Execute(command);
+    CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
     EXPECT_EQ(result.output, std::string());
     // std::cout << result.output << std::endl;
@@ -149,7 +151,7 @@ TEST_F(AgentExecutorTest, Execute_lsCommandInvalidParameter_Error)
 TEST_F(AgentExecutorTest, Execute_lsCommandValidParameter_Success)
 {
     std::string command = "ls -l /";
-    CommandResult result = Executor::Execute(command);
+    CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
     EXPECT_TRUE(CaseInsensitiveContains(result.output, "etc"));
     EXPECT_TRUE(CaseInsensitiveContains(result.output, "bin"));
@@ -166,7 +168,7 @@ TEST_F(AgentExecutorTest, Execute_touchCommand_SuccessNoOutput)
     std::string tmp_file = "/tmp/test.file";
     std::string command = "touch ";
     command += tmp_file;
-    CommandResult result = Executor::Execute(command);
+    CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
     EXPECT_EQ(result.output, std::string());
     EXPECT_EQ(result.error, std::string());
@@ -191,7 +193,7 @@ TEST_F(AgentExecutorTest, Execute_SaveToFileB64Data_SuccessNoOutput)
     command += encoder.encode();
     command += "\" | base64 -d > ";
     command += tmp_file;
-    CommandResult result = Executor::Execute(command);
+    CommandResult result = Executor::Execute(command, kTestTimeoutSec);
     // std::cout << command << std::endl;
 
     //std::cout << test.encode();
@@ -216,20 +218,16 @@ TEST_F(AgentExecutorTest, Execute_SaveToFileB64Data_SuccessNoOutput)
     @brief Test of Execute method
         when ... 
 */
-TEST_F(AgentExecutorTest, Execute_Ping)
+TEST_F(AgentExecutorTest, Execute_ShortPing_Success)
 {
-    std::string command = "ping 8.8.8.8";
+    std::string host = "8.8.8.8";
+    std::string command = "ping " + host;
        
-    CommandResult result = Executor::Execute(command);
-    // std::cout << command << std::endl;
-    sleep(3);
-    system("pkill ping");
-
-    //std::cout << test.encode();
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, "ping"));
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, "bytes of data"));
-    EXPECT_TRUE(CaseInsensitiveContains(result.error, "terminate"));
+    CommandResult result = Executor::Execute(command, kTestTimeoutSec);
     
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, "ping"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.output, std::string("bytes from ") + host));
+    EXPECT_TRUE(result.error.empty());
     
     EXPECT_EQ(result.exitCode, ExecStatus::SigTerminated);
 }
