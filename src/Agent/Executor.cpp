@@ -6,7 +6,7 @@
 #include <chrono>
 #include <sys/wait.h>
 
-// Вспомогательная функция для перевода в нижний регистр
+// Helper function to convert to lowercase
 std::string ToLower(const std::string& str) {
     std::string result;
     result.resize(str.length());
@@ -20,7 +20,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
 {
     CommandResult result;
     
-    // Защита от пустой команды
+    // Protection against empty command
     if (command.empty()) {
         result.exitCode = ExecStatus::Success;
         return result;
@@ -46,7 +46,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
     }
 
     if (pid == 0) {
-        // child proc
+        // child process
         close(stdoutPipe[0]);
         close(stderrPipe[0]);
         
@@ -58,8 +58,8 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         close(stdoutPipe[1]);
         close(stderrPipe[1]);
         
-        // Создаем новую группу процессов для дочернего процесса
-        // Это позволит убивать все дочерние процессы вместе с родительским
+        // Create a new process group for the child process
+        // This allows killing all child processes together with the parent
         setpgid(0, 0);
         
         execl("/bin/sh", "sh", "-c", command.c_str(), NULL);
@@ -67,11 +67,11 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         exit(static_cast<int>(ExecStatus::ExeclFailed));
     } 
     else {
-        // parent proc
+        // parent process
         close(stdoutPipe[1]);
         close(stderrPipe[1]);
         
-        // Устанавливаем неблокирующий режим для пайпов
+        // Set non-blocking mode for pipes
         int flags = fcntl(stdoutPipe[0], F_GETFL, 0);
         fcntl(stdoutPipe[0], F_SETFL, flags | O_NONBLOCK);
         fcntl(stderrPipe[0], F_SETFL, flags | O_NONBLOCK);
@@ -83,26 +83,26 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         bool timeoutOccurred = false;
         
         while (!processExited && !timeoutOccurred) {
-            // Проверяем таймаут
+            // Check timeout
             auto now = std::chrono::steady_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
             
             if (elapsed >= timeoutSeconds) {
                 std::cout << "Timeout reached (" << timeoutSeconds << "s), killing process group " << pid << std::endl;
                 
-                // Убиваем всю группу процессов (отрицательный PID = группа процессов)
-                // Сначала SIGTERM
+                // Kill the entire process group (negative PID = process group)
+                // First SIGTERM
                 kill(-pid, SIGTERM);
                 usleep(200000); // 200ms
                 
-                // Затем SIGKILL для гарантии
+                // Then SIGKILL for guarantee
                 kill(-pid, SIGKILL);
                 usleep(100000); // 100ms
                 
-                // Проверяем, завершился ли процесс
+                // Check if the process terminated
                 pid_t waitResult = waitpid(pid, &status, WNOHANG);
                 if (waitResult == 0) {
-                    // Если не завершился, ждем принудительно
+                    // If not terminated, wait forcibly
                     waitpid(pid, &status, 0);
                 }
                 
@@ -111,38 +111,38 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
                 break;
             }
             
-            // Читаем доступные данные из пайпов (неблокирующее)
+            // Read available data from pipes (non-blocking)
             ssize_t count;
             
-            // Чтение stdout
+            // Read stdout
             count = read(stdoutPipe[0], buffer, sizeof(buffer) - 1);
             if (count > 0) {
                 buffer[count] = '\0';
                 result.output += buffer;
             } else if (count == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                // Реальная ошибка чтения
+                // Actual read error
                 break;
             }
                         
-            // Чтение stderr 
+            // Read stderr
             count = read(stderrPipe[0], buffer, sizeof(buffer) - 1);
             if (count > 0) {
                 buffer[count] = '\0';
-                // Сохраняем ВСЁ, что пришло в stderr
+                // Save EVERYTHING that came to stderr
                 result.error += buffer;
             } else if (count == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
                 break;
             }
             
-            // Проверяем статус процесса (неблокирующее)
+            // Check process status (non-blocking)
             pid_t waitResult = waitpid(pid, &status, WNOHANG);
             
             if (waitResult == pid) {
-                // Процесс завершился
+                // Process terminated
                 processExited = true;
                 break;
             } else if (waitResult == -1 && errno != ECHILD) {
-                // Ошибка waitpid
+                // waitpid error
                 result.exitCode = ExecStatus::WaitFailed;
                 break;
             }
@@ -150,15 +150,15 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             usleep(50000); // 50ms
         }
         
-        // Если был таймаут, убеждаемся что процесс действительно завершен
+        // If timeout occurred, make sure the process is actually terminated
         if (timeoutOccurred) {
-            // Даем время на завершение
+            // Give time to terminate
             usleep(300000); // 300ms
             
-            // Финальная проверка
+            // Final check
             pid_t waitResult = waitpid(pid, &status, WNOHANG);
             if (waitResult == 0) {
-                // Процесс все еще жив - убиваем еще раз всю группу
+                // Process still alive - kill the whole group again
                 std::cout << "Process still alive, killing with SIGKILL again" << std::endl;
                 kill(-pid, SIGKILL);
                 waitpid(pid, &status, 0);
@@ -167,18 +167,18 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             }
         }
         
-        // Дочитываем остатки данных после завершения процесса
+        // Read remaining data after process termination
         fcntl(stdoutPipe[0], F_SETFL, flags);
         fcntl(stderrPipe[0], F_SETFL, flags);
         
-        // Финальное чтение stdout
+        // Final read of stdout
         ssize_t count;
         while ((count = read(stdoutPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
             result.output += buffer;
         }
         
-        // Финальное чтение stderr
+        // Final read of stderr
         while ((count = read(stderrPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
             std::string lower = ToLower(std::string(buffer));
@@ -190,15 +190,15 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         close(stdoutPipe[0]);
         close(stderrPipe[0]);
         
-        // Если процесс еще не завершился и не было таймаута, ждем его
+        // If process hasn't terminated yet and no timeout occurred, wait for it
         if (!processExited && !timeoutOccurred) {
             waitpid(pid, &status, 0);
         }
         
-        // Обработка статуса завершения
+        // Handle termination status
         if (timeoutOccurred) {
             result.exitCode = ExecStatus::Timeout;
-            // Проверяем, был ли процесс убит сигналом
+            // Check if the process was killed by signal
             if (WIFSIGNALED(status)) {
                 int signal_num = WTERMSIG(status);
                 std::cout << "Process was killed by signal: " << signal_num << std::endl;
@@ -226,4 +226,3 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         return result;
     }
 }
-
