@@ -66,7 +66,7 @@ protected:
     @brief Test of Execute method
             when command is empty
 */
-TEST_F(AgentExecutorTest, Execute_EmptyCommand_SuccessNoOutput)
+TEST_F(AgentExecutorTest, Execute_EmptyCommand_Success)
 {
     // no command
     std::string command = "";
@@ -81,7 +81,7 @@ TEST_F(AgentExecutorTest, Execute_EmptyCommand_SuccessNoOutput)
     @brief Test of Execute method
             when command is non-existing script/binary
 */
-TEST_F(AgentExecutorTest, Execute_CommandIsNonExisting_ErrorNotFound)
+TEST_F(AgentExecutorTest, Execute_NonExistingCommand_ErrorNotFound)
 {
     std::string command = "invalid_name";
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
@@ -163,7 +163,7 @@ TEST_F(AgentExecutorTest, Execute_lsCommandValidParameter_Success)
     @brief Test of Execute method
         when command is valid and some stdout expected
 */
-TEST_F(AgentExecutorTest, Execute_touchCommand_SuccessNoOutput)
+TEST_F(AgentExecutorTest, Execute_TouchCommand_Success)
 {
     std::string tmp_file = "/tmp/test.file";
     std::string command = "touch ";
@@ -183,7 +183,7 @@ TEST_F(AgentExecutorTest, Execute_touchCommand_SuccessNoOutput)
         when command contains base64 decoding
         and saving results to file
 */
-TEST_F(AgentExecutorTest, Execute_SaveToFileB64Data_SuccessNoOutput)
+TEST_F(AgentExecutorTest, Execute_DecodeB64DataAndSaveToFile_Success)
 {
     std::string test_message = "test message for encoding";
     Base64 encoder(test_message, Base64::TextEncode);
@@ -237,7 +237,7 @@ TEST_F(AgentExecutorTest, Execute_ShortPing_Success)
     @brief Test of Execute method
         when ping is unlimited and have to be terminated after timeout
 */
-TEST_F(AgentExecutorTest, Execute_UnlimitedPing_Success)
+TEST_F(AgentExecutorTest, Execute_LongPing_TerminatedByTimeout)
 {
     std::string host = "8.8.8.8";
     std::string command = "ping " + host;
