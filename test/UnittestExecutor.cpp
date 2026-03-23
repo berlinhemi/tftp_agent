@@ -248,7 +248,7 @@ TEST_F(AgentExecutorTest, Execute_LongPing_TerminatedByTimeout)
     EXPECT_TRUE(CaseInsensitiveContains(result.output, std::string("bytes from ") + host));
     EXPECT_TRUE(result.error.empty());
     
-    EXPECT_EQ(result.exitCode, ExecStatus::SigTerminated);
+    EXPECT_EQ(result.exitCode, ExecStatus::Timeout);
 }
 
 
