@@ -88,25 +88,19 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
             
             if (elapsed >= timeoutSeconds) {
-                std::cout << "Timeout reached (" << timeoutSeconds << "s), killing process group " << pid << std::endl;
-                
-                // Kill the entire process group (negative PID = process group)
-                // First SIGTERM
+                std::cout << "Timeout reached" << std::endl;
+                // Give a chance to terminate gracefully
                 kill(-pid, SIGTERM);
-                usleep(200000); // 200ms
-                
-                // Then SIGKILL for guarantee
-                kill(-pid, SIGKILL);
-                usleep(100000); // 100ms
-                
-                // Check if the process terminated
+                usleep(200000);
                 pid_t waitResult = waitpid(pid, &status, WNOHANG);
+                // Kill proccess group
                 if (waitResult == 0) {
-                    // If not terminated, wait forcibly
-                    waitpid(pid, &status, 0);
+                    kill(-pid, SIGKILL);
+                    // blocking call
+                    waitpid(pid, &status, 0);  
                 }
-                
                 timeoutOccurred = true;
+                processExited = true;
                 result.exitCode = ExecStatus::Timeout;
                 break;
             }
@@ -119,7 +113,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             if (count > 0) {
                 buffer[count] = '\0';
                 result.output += buffer;
-            } else if (count == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            } else if (count == -1 && errno != EAGAIN) {
                 // Actual read error
                 break;
             }
@@ -130,7 +124,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
                 buffer[count] = '\0';
                 // Save EVERYTHING that came to stderr
                 result.error += buffer;
-            } else if (count == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            } else if (count == -1 && errno != EAGAIN) {
                 break;
             }
             
@@ -150,24 +144,8 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             usleep(50000); // 50ms
         }
         
-        // If timeout occurred, make sure the process is actually terminated
-        if (timeoutOccurred) {
-            // Give time to terminate
-            usleep(300000); // 300ms
-            
-            // Final check
-            pid_t waitResult = waitpid(pid, &status, WNOHANG);
-            if (waitResult == 0) {
-                // Process still alive - kill the whole group again
-                std::cout << "Process still alive, killing with SIGKILL again" << std::endl;
-                kill(-pid, SIGKILL);
-                waitpid(pid, &status, 0);
-            } else if (waitResult == pid) {
-                processExited = true;
-            }
-        }
         
-        // Read remaining data after process termination
+        // Wait remaining data after process termination
         fcntl(stdoutPipe[0], F_SETFL, flags);
         fcntl(stderrPipe[0], F_SETFL, flags);
         
@@ -182,7 +160,6 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         while ((count = read(stderrPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
             std::string lower = ToLower(std::string(buffer));
-           
             result.error += buffer;
             
         }
@@ -190,37 +167,25 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         close(stdoutPipe[0]);
         close(stderrPipe[0]);
         
-        // If process hasn't terminated yet and no timeout occurred, wait for it
-        if (!processExited && !timeoutOccurred) {
+        // If no timeout occurred => get exit status
+        if (!timeoutOccurred) {
             waitpid(pid, &status, 0);
-        }
-        
-        // Handle termination status
-        if (timeoutOccurred) {
-            result.exitCode = ExecStatus::Timeout;
-            // Check if the process was killed by signal
-            if (WIFSIGNALED(status)) {
+            
+            if (WIFEXITED(status)) {
+                int exit_code = WEXITSTATUS(status);
+                result.exitCode = static_cast<ExecStatus>(exit_code);
+            } 
+            else if (WIFSIGNALED(status)) {
                 int signal_num = WTERMSIG(status);
-                std::cout << "Process was killed by signal: " << signal_num << std::endl;
-                if (signal_num == SIGTERM || signal_num == SIGKILL) {
-                    result.exitCode = ExecStatus::SigTerminated;
-                }
+                std::cout << "Process terminated by signal: " << signal_num << std::endl;
+                result.exitCode = ExecStatus::ChildSignaled;
             }
-        } else if (WIFEXITED(status)) {
-            int exit_code = WEXITSTATUS(status);
-            std::cout << "WIFEXITED OK:" << exit_code << "\n";
-            result.exitCode = static_cast<ExecStatus>(exit_code);
-        } 
-        else if (WIFSIGNALED(status)) {
-            int signal_num = WTERMSIG(status);
-            std::cout << "Process terminated by signal: " << signal_num << std::endl;
-            result.exitCode = ExecStatus::ChildSignaled;
-        }
-        else if (WIFSTOPPED(status)) {
-            result.exitCode = ExecStatus::ChildStopped;
-        }
-        else {
-            result.exitCode = ExecStatus::UnknownError;
+            else if (WIFSTOPPED(status)) {
+                result.exitCode = ExecStatus::ChildStopped;
+            }
+            else {
+                result.exitCode = ExecStatus::UnknownError;
+            }
         }
 
         return result;
