@@ -40,6 +40,11 @@ static void ConfigureLogger()
     el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
 }
 
+void DoIteration()
+{
+    
+}
+
 int main(int argc, char **argv)
 {
 
