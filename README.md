@@ -9,7 +9,7 @@
   This tool implements client functionality in a client-server application. 
   Any TFTP server can act as server side of the application.
 ## ✨ Key features
-- receive commands from tftp server
+- receive shell commands from tftp server
 - execute commands
 - send results to tftp server
 
@@ -24,6 +24,7 @@ openssl >= 3.0.0
 * `cd Debug && make`
 
 ### TODO: 
+- do we need class Agent ?
 ~ refactor according GStyle and CppGuide
 - add const to some methods
 - check arguments
