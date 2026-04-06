@@ -13,20 +13,18 @@ class Agent
 {
 public:
     Agent(std::string host,  std::string encryptionKey, uint16_t port = 69);
-    std::string GetTask();
     void DoIteration();
-    void SendResult(CommandResult result);
+    
 private:
-    std::string host;
-    uint16_t port;
-    std::string encryptionKey;
+    std::string GetCommand();
+    bool SendResult(CommandResult result);
+
+    std::string m_host;
+    uint16_t m_port;
+    std::string m_encryptionKey;
+
+    
 };
-
-
-
-
-
-
 
 
 
