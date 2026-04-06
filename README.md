@@ -24,7 +24,9 @@ openssl >= 3.0.0
 * `cd Debug && make`
 
 ### TODO: 
-- do we need class Agent ?
+- change CommandResult member names
+- refactor private members name
+- check for same commands !
 ~ refactor according GStyle and CppGuide
 - add const to some methods
 - check arguments
