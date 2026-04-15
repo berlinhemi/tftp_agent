@@ -88,7 +88,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
             
             if (elapsed >= timeoutSeconds) {
-                std::cout << "Timeout reached" << std::endl;
+                LOG(INFO) << "Timeout reached";
                 // Give a chance to terminate gracefully
                 kill(-pid, SIGTERM);
                 usleep(200000);
@@ -177,7 +177,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             } 
             else if (WIFSIGNALED(status)) {
                 int signal_num = WTERMSIG(status);
-                std::cout << "Process terminated by signal: " << signal_num << std::endl;
+                LOG(INFO) << "Process terminated by signal: " << signal_num;
                 result.exitCode = ExecStatus::ChildSignaled;
             }
             else if (WIFSTOPPED(status)) {
