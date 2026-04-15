@@ -1,7 +1,7 @@
 
 #include "ArgParser.h"
 #include "Packer.h"
-#include "TFTPClient.h"
+#include "Transport/TFTPClient.h"
 
 #include <algorithm>
 #include <chrono>
@@ -40,10 +40,6 @@ static void ConfigureLogger()
     el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
 }
 
-void DoIteration()
-{
-    
-}
 
 int main(int argc, char **argv)
 {

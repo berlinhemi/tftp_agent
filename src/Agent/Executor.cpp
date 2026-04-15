@@ -112,7 +112,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             count = read(stdoutPipe[0], buffer, sizeof(buffer) - 1);
             if (count > 0) {
                 buffer[count] = '\0';
-                result.output += buffer;
+                result.std_err += buffer;
             } else if (count == -1 && errno != EAGAIN) {
                 // Actual read error
                 break;
@@ -123,7 +123,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             if (count > 0) {
                 buffer[count] = '\0';
                 // Save EVERYTHING that came to stderr
-                result.error += buffer;
+                result.std_err += buffer;
             } else if (count == -1 && errno != EAGAIN) {
                 break;
             }
@@ -153,14 +153,14 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         ssize_t count;
         while ((count = read(stdoutPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
-            result.output += buffer;
+            result.std_out += buffer;
         }
         
         // Final read of stderr
         while ((count = read(stderrPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
             std::string lower = ToLower(std::string(buffer));
-            result.error += buffer;
+            result.std_out += buffer;
             
         }
         

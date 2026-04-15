@@ -28,8 +28,8 @@ enum class ExecStatus {
 };
 
 struct CommandResult {
-    std::string output;
-    std::string error;
+    std::string std_out;
+    std::string std_err;
     ExecStatus exitCode;
     //bool timedOut; //TODO
 };
