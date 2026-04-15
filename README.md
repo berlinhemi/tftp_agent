@@ -24,7 +24,8 @@ openssl >= 3.0.0
 * `cd Debug && make`
 
 ### TODO: 
-- change CommandResult member names
+- add readable statuses
+- add verbose output
 - refactor private members name
 - check for same commands !
 ~ refactor according GStyle and CppGuide
