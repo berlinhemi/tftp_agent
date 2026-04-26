@@ -41,7 +41,7 @@ bool Agent::SendResult(CommandResult result)
 
     UdpSocket sock;
     TFTPClient client(&sock, m_host, m_port);
-    TFTPClient::Status status = client.Put(packed_data, TFTPClient::GetUploadedDefaultFName());
+    TFTPClient::Status status = client.Put(packed_data, TFTPClient::GetUploadedUniqueFName());
     if(status != TFTPClient::Status::kSuccess)
     {
         LOG(ERROR) << "Error while sending results. Error code: " << (int)status;

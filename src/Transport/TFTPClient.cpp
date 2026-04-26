@@ -8,6 +8,9 @@
 #include <iostream>
 #include <format>
 #include <cassert>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 
 TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t port)
@@ -302,8 +305,26 @@ std::string  TFTPClient::GetDownloadedDefaultFName()
     return kDownloadedDefaultFname;
 }
 
-std::string  TFTPClient::GetUploadedDefaultFName() 
-{
-    return kUploadedDefaultFname;
+std::string TFTPClient::GenerateTimeSuffix() {
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+    auto tm = *std::localtime(&time_t_now);
+    
+    std::ostringstream oss;
+    oss << "output_" 
+        << std::setfill('0') << std::setw(2) << tm.tm_mday
+        << std::setfill('0') << std::setw(2) << (tm.tm_mon + 1)
+        << std::setfill('0') << std::setw(2) << (tm.tm_year % 100)
+        << "_"
+        << std::setfill('0') << std::setw(2) << tm.tm_hour
+        << std::setfill('0') << std::setw(2) << tm.tm_min;
+    
+    return oss.str();
+}
+
+std::string TFTPClient::GetUploadedUniqueFName() {
+    std::ostringstream oss;
+    oss << kBaseFilename << "_" << (++kCallCounter);
+    return oss.str();
 }
 

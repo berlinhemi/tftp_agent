@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         LOG(INFO) << "Using default file name";
         fname = (operation == "get") ?
          TFTPClient::GetDownloadedDefaultFName() 
-         : TFTPClient::GetUploadedDefaultFName();
+         : TFTPClient::GetUploadedUniqueFName();
     }
     
 

@@ -112,7 +112,7 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
             count = read(stdoutPipe[0], buffer, sizeof(buffer) - 1);
             if (count > 0) {
                 buffer[count] = '\0';
-                result.std_err += buffer;
+                result.std_out += buffer;
             } else if (count == -1 && errno != EAGAIN) {
                 // Actual read error
                 break;

@@ -52,7 +52,7 @@ protected:
             str.begin(), str.end(),
             substr.begin(), substr.end(),
             [](char ch1, char ch2) {
-                return std::toupper(ch1) == std::toupper(ch2);
+                return std::tolower(ch1) == std::tolower(ch2);
             }
         );
         return it != str.end();

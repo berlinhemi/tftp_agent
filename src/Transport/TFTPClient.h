@@ -44,16 +44,13 @@ public:
     static uint8_t GetHeaderSize() ;
     static uint16_t GetMaxDataSize();
     static std::string GetDownloadedDefaultFName();
-    static std::string GetUploadedDefaultFName();
+    static std::string GetUploadedUniqueFName();
     std::string ErrorDescription(Status code) const;
 
     ~TFTPClient() = default;
 
 private:
-    static inline const std::string kDownloadedDefaultFname = "input";
-    static inline const std::string kUploadedDefaultFname = "output";
-    static const uint8_t kHeaderSize = 4;
-    static const uint16_t kDataMaxSize = 512;
+    
 
     using Result = std::pair<Status, int32_t>;
 
@@ -62,6 +59,15 @@ private:
     Status GetData(std::vector<BYTE>& buffer);
     Status PutData(const std::vector<BYTE>& data);
     Status Read(std::vector<BYTE>& buffer);
+    static std::string GenerateTimeSuffix();
+
+    static inline const std::string kDownloadedDefaultFname = "input";
+    static inline const std::string kUploadedDefaultFname = "output";
+    static const uint8_t kHeaderSize = 4;
+    static const uint16_t kDataMaxSize = 512;
+    static inline int kCallCounter = 0;
+    // 
+    static inline std::string kBaseFilename = GenerateTimeSuffix();
 
     UdpSocket* m_socket;
     std::string m_remote_addr;
