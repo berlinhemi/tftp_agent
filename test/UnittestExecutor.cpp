@@ -72,8 +72,8 @@ TEST_F(AgentExecutorTest, Execute_EmptyCommand_Success)
     std::string command = "";
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
-    EXPECT_EQ(result.output, std::string());
-    EXPECT_EQ(result.error, std::string());
+    EXPECT_EQ(result.std_out, std::string());
+    EXPECT_EQ(result.std_err, std::string());
     EXPECT_EQ(result.exitCode, ExecStatus::Success);
 }
 
@@ -86,8 +86,8 @@ TEST_F(AgentExecutorTest, Execute_NonExistingCommand_ErrorNotFound)
     std::string command = "invalid_name";
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
-    EXPECT_EQ(result.output, std::string());
-    EXPECT_TRUE(CaseInsensitiveContains(result.error, "not found"));
+    EXPECT_EQ(result.std_out, std::string());
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_err, "not found"));
     EXPECT_EQ(result.exitCode, ExecStatus::CommandNotFound);
 }
 
@@ -109,8 +109,8 @@ TEST_F(AgentExecutorTest, Execute_FileLimitExceed_PipeError) {
         CommandResult result = Executor::Execute("echo test", kTestTimeoutSec);
         
         EXPECT_EQ(result.exitCode, ExecStatus::PipeFailed);
-        EXPECT_TRUE(result.output.empty());
-        EXPECT_TRUE(result.error.empty());
+        EXPECT_TRUE(result.std_out.empty());
+        EXPECT_TRUE(result.std_err.empty());
                 
         if (setrlimit(RLIMIT_NOFILE, &old_limit) == -1) {
             std::cout << "restore failed: " << strerror(errno) << std::endl;
@@ -136,11 +136,11 @@ TEST_F(AgentExecutorTest, Execute_lsCommandInvalidParameter_Error)
     std::string command = "ls -l /path/not/exist";
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
-    EXPECT_EQ(result.output, std::string());
+    EXPECT_EQ(result.std_out, std::string());
     // std::cout << result.output << std::endl;
     // std::cout << result.error << std::endl;
     // std::cout << (int)result.exitCode << std::endl;
-    EXPECT_TRUE(CaseInsensitiveContains(result.error, "no such file"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_err, "no such file"));
     EXPECT_NE(result.exitCode, ExecStatus::Success);
 }
 
@@ -153,9 +153,9 @@ TEST_F(AgentExecutorTest, Execute_lsCommandValidParameter_Success)
     std::string command = "ls -l /";
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, "etc"));
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, "bin"));
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, "boot"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_out, "etc"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_out, "bin"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_out, "boot"));
     EXPECT_EQ(result.exitCode, ExecStatus::Success);
 }
 
@@ -170,8 +170,8 @@ TEST_F(AgentExecutorTest, Execute_TouchCommand_Success)
     command += tmp_file;
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
 
-    EXPECT_EQ(result.output, std::string());
-    EXPECT_EQ(result.error, std::string());
+    EXPECT_EQ(result.std_out, std::string());
+    EXPECT_EQ(result.std_err, std::string());
     EXPECT_TRUE(std::filesystem::exists(tmp_file));
     EXPECT_TRUE(std::filesystem::remove(tmp_file));
     EXPECT_EQ(result.exitCode, ExecStatus::Success);
@@ -197,8 +197,8 @@ TEST_F(AgentExecutorTest, Execute_DecodeB64DataAndSaveToFile_Success)
     // std::cout << command << std::endl;
 
     //std::cout << test.encode();
-    EXPECT_EQ(result.output, std::string());
-    EXPECT_EQ(result.error, std::string());
+    EXPECT_EQ(result.std_out, std::string());
+    EXPECT_EQ(result.std_err, std::string());
     EXPECT_TRUE(std::filesystem::exists(tmp_file));
     std::ifstream ifs(tmp_file);
     std::string decoded_message;
@@ -225,9 +225,9 @@ TEST_F(AgentExecutorTest, Execute_ShortPing_Success)
        
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
     
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, "ping"));
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, std::string("bytes from ") + host));
-    EXPECT_TRUE(result.error.empty());
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_out, "ping"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_out, std::string("bytes from ") + host));
+    EXPECT_TRUE(result.std_err.empty());
     
     EXPECT_EQ(result.exitCode, ExecStatus::Success);
 }
@@ -244,9 +244,9 @@ TEST_F(AgentExecutorTest, Execute_LongPing_TerminatedByTimeout)
        
     CommandResult result = Executor::Execute(command, kTestTimeoutSec);
     
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, "ping"));
-    EXPECT_TRUE(CaseInsensitiveContains(result.output, std::string("bytes from ") + host));
-    EXPECT_TRUE(result.error.empty());
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_out, "ping"));
+    EXPECT_TRUE(CaseInsensitiveContains(result.std_out, std::string("bytes from ") + host));
+    EXPECT_TRUE(result.std_err.empty());
     
     EXPECT_EQ(result.exitCode, ExecStatus::Timeout);
 }
