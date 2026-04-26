@@ -24,10 +24,8 @@ openssl >= 3.0.0
 * `cd Debug && make`
 
 ### TODO: 
-- upload file name should be unique
 - add readable statuses
-- add verbose output
-- refactor private members name
+~ add verbose output
 - check for same commands !
 ~ refactor according GStyle and CppGuide
 - add const to some methods
