@@ -133,3 +133,10 @@ TEST_F(AgentPackerTest, Pack_EmptyBuffer_ReturnsEmpty)
     
     EXPECT_TRUE(result.empty());
 }
+
+int main(int argc, char** argv)
+{   
+    ::testing::InitGoogleTest(&argc, argv);
+    ::testing::InitGoogleMock(&argc, argv);
+    return RUN_ALL_TESTS();
+}

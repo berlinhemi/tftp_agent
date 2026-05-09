@@ -41,7 +41,10 @@ target_link_libraries(AgentExecutorTest
                       gmock)
 
 target_link_libraries(AgentPackerTest 
-                      executor
+                      packer
+                      ZLIB::ZLIB
+                        OpenSSL::SSL 
+                        OpenSSL::Crypto
                       gtest
                       gmock)
         #easyloggingpp::easyloggingpp)
