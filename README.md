@@ -24,6 +24,7 @@ openssl >= 3.0.0
 * `cd Debug && make`
 
 ### TODO: 
+- add class doc-strings
 - add readable statuses
 ~ add verbose output
 - check for same commands !
