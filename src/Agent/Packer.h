@@ -5,7 +5,7 @@
 #include <string>
 
 typedef unsigned char BYTE;
-static const size_t MAX_DATA_SIZE = 10*1024*1024; // 10 MB
+
 
 class Packer
 {
@@ -15,6 +15,7 @@ public:
     std::vector<BYTE> Pack(const std::vector<BYTE>& buffer);
     std::vector<BYTE> Unpack(const std::vector<BYTE>& buffer);
     
+    static const inline size_t kMaxDataSizeBytes = 100*1024*1024; // 100 MB
 private:
 
     std::vector<BYTE> m_key;
