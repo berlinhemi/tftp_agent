@@ -38,8 +38,6 @@ class Executor
 {
 public:
     static CommandResult Execute(const std::string& command,  int timeoutSeconds = 600); 
-//private:
-//    static const int EXECL_FAILURE = 150;
 };
 
 
