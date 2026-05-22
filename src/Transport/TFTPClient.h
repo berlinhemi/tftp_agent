@@ -45,7 +45,7 @@ public:
     static uint16_t GetMaxDataSize();
     static std::string GetDownloadedDefaultFName();
     static std::string GetUploadedUniqueFName();
-    std::string ErrorDescription(Status code) const;
+    static std::string ErrorDescription(Status code);
 
     ~TFTPClient() = default;
 

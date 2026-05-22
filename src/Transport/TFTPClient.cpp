@@ -40,8 +40,7 @@ TFTPClient::Status TFTPClient::Get(std::vector<BYTE>& buffer, const std::string&
     // DATA
     status = GetData(buffer);
     if (status == Status::kSuccess) {
-        //if verbose
-        LOG(INFO) << std::format("Get(): total {} bytes received", buffer.size());
+        VLOG(1) << std::format("Get(): total {} bytes received", buffer.size());
     }
     return status;
 }
@@ -68,39 +67,33 @@ TFTPClient::Status TFTPClient::Put(const std::vector<BYTE>& data, const std::str
     // DATA
     status = PutData(data);
     if (status == Status::kSuccess) {
-        //if verbose
-        LOG(INFO) << std::format("Put(): {} bytes written", data.size());
+        VLOG(1) << std::format("Put(): {} bytes written", data.size());
     }
     return status;
 }
 
 
-std::string TFTPClient::ErrorDescription(TFTPClient::Status code) const
+ std::string TFTPClient::ErrorDescription(TFTPClient::Status code) 
 {
-    switch (code) {
-    case Status::kSuccess:
-        return "Success";
-    case Status::kInvalidSocket:
-        return "Socket is not initialized";
-    case Status::kWriteError:
-        return "Write Socket error";
-    case Status::kReadError:
-        return "Read Socket error";
-    case Status::kUnexpectedPacketReceived:
-        return "Unexpected Packet Received";
-    case Status::kEmptyFilename:
-        return "Empty Filename";
-    case Status::kOpenFileError:
-        return "Can't Open File";
-    case Status::kWriteFileError:
-        return "Write File error";
-    case Status::kReadFileError:
-        return "Read File error";
-    case Status::kSendRequestError:
-        return "Send read/write request error";
-    default:
-        return "Unidentified error";
+    static const std::map<Status, std::string> descriptions = {
+        {Status::kSuccess, "Success"},
+        {Status::kInvalidSocket, "Socket is not initialized"},
+        {Status::kWriteError, "Write Socket error"},
+        {Status::kReadError, "Read Socket error"},
+        {Status::kUnexpectedPacketReceived, "Unexpected Packet Received"},
+        {Status::kEmptyFilename, "Empty Filename"},
+        {Status::kOpenFileError, "Can't Open File"},
+        {Status::kWriteFileError, "Write File error"},
+        {Status::kReadFileError, "Read File error"},
+        {Status::kSendRequestError, "Send read/write request error"}
+    };
+    
+    auto it = descriptions.find(code);
+    if (it != descriptions.end()) {
+        return it->second;
     }
+    
+    return "Unidentified error: " + std::to_string(static_cast<int>(code));
 }
 
 TFTPClient::Status TFTPClient::SendRequest(const std::string& file_name, OpCode opCode)
