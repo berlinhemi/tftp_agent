@@ -25,8 +25,6 @@ openssl >= 3.0.0
 
 ### TODO: 
 - add class doc-strings
-- add readable statuses
-~ add verbose output
 - check for same commands !
 ~ refactor according GStyle and CppGuide
 - add const to some methods
