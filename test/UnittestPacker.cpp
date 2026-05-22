@@ -222,16 +222,14 @@ TEST_F(AgentPackerTest, SetKey_ValidAndInvalid_WorksCorrectly)
     auto packed_initial = packer.Pack(data);
     
     // Change to empty key (should fail)
-    bool result = packer.SetKey("");
-    EXPECT_FALSE(result);
+    EXPECT_FALSE(packer.SetKey(""));
     
     // Pack with same key (should still work)
     auto packed_same = packer.Pack(data);
     EXPECT_EQ(packed_initial, packed_same);
     
     // Change to new valid key
-    result = packer.SetKey("new_valid_key");
-    EXPECT_TRUE(result);
+    EXPECT_TRUE(packer.SetKey("new_valid_key"));
     
     // Pack with new key (should be different)
     auto packed_new = packer.Pack(data);
