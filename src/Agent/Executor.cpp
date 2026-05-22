@@ -191,3 +191,28 @@ CommandResult Executor::Execute(const std::string& command, int timeoutSeconds)
         return result;
     }
 }
+
+std::string Executor::ErrorDescription(ExecStatus execStatus)
+{
+    static const std::map<ExecStatus, std::string> descriptions = {
+        {ExecStatus::Success, "Success"},
+        {ExecStatus::CommandNotFound, "Command not found"},
+        {ExecStatus::PermissionDenied, "Permission denied"},
+        {ExecStatus::SigTerminated, "Process terminated by signal"},
+        {ExecStatus::ForkFailed, "Fork failed - unable to create child process"},
+        {ExecStatus::PipeFailed, "Pipe creation failed"},
+        {ExecStatus::WaitFailed, "Wait for child process failed"},
+        {ExecStatus::ExeclFailed, "Exec command failed"},
+        {ExecStatus::ChildSignaled, "Child process terminated by signal"},
+        {ExecStatus::ChildStopped, "Child process stopped"},
+        {ExecStatus::Timeout, "Command execution timeout exceeded"},
+        {ExecStatus::UnknownError, "Unknown error occurred. Code:" + std::to_string(static_cast<int>(execStatus))}
+    };
+    
+    auto it = descriptions.find(execStatus);
+    if (it != descriptions.end()) {
+        return it->second;
+    }
+    
+    return "Unidentified error code: " + std::to_string(static_cast<int>(execStatus));
+}

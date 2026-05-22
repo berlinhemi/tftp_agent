@@ -14,12 +14,14 @@ std::string Agent::GetCommand()
 {
     UdpSocket sock;
     TFTPClient client(&sock, m_host, m_port);
-    //LOG(INFO) << std::format("Start TFTP client {}:{}", m_host.c_str(), m_port);
     
     std::vector<BYTE> command;
     TFTPClient::Status status = client.Get(command, TFTPClient::GetDownloadedDefaultFName()); 
     if(status != TFTPClient::Status::kSuccess)
+    {
+        LOG(ERROR) << "Error while getting command: " << TFTPClient::ErrorDescription(status);
         return "";
+    }
 
     Packer packer(m_encryptionKey);
     std::vector<BYTE> unpacked = packer.Unpack(command);
@@ -27,7 +29,6 @@ std::string Agent::GetCommand()
     for (auto e : unpacked){
         oss << e;
     }
-    // LOG(INFO) << "Command obtained: " << oss.str();
     return oss.str();
 }
 
@@ -44,7 +45,7 @@ bool Agent::SendResult(CommandResult result)
     TFTPClient::Status status = client.Put(packed_data, TFTPClient::GetUploadedUniqueFName());
     if(status != TFTPClient::Status::kSuccess)
     {
-        LOG(ERROR) << "Error while sending results. Error code: " << (int)status;
+        LOG(ERROR) << "Error while sending results: " << TFTPClient::ErrorDescription(status);
         return false;
     }
     return true;
@@ -61,8 +62,7 @@ void Agent::DoIteration()
     }
     // using default timeout
     CommandResult result = Executor::Execute(command);
-    // TODO: readable statuses
-    VLOG(1) << "result.exitCode: " << int(result.exitCode); 
+    VLOG(1) << "result.exitStatus: " << Executor::ErrorDescription(result.exitCode);
     VLOG(1) << "result.stdout: " << result.std_out; 
     VLOG(1) << "result.stderr: " << result.std_err; 
     if(SendResult(result))
