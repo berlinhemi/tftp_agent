@@ -66,7 +66,6 @@ private:
     static const uint8_t kHeaderSize = 4;
     static const uint16_t kDataMaxSize = 512;
     static inline int kCallCounter = 0;
-    // 
     static inline std::string kBaseFilename = GenerateTimeSuffix();
 
     UdpSocket* m_socket;

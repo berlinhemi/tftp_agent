@@ -42,50 +42,6 @@ bool UdpSocket::Init()
     return true;
 }
 
-// bool UdpSocket::Bind(const char *local_addr, uint16_t local_port)
-// {
-//     if (local_port == 0) {
-//         return false;
-//     }
-
-//     if (local_addr != nullptr) {
-//         strcpy(address_, local_addr);
-//     }
-//     port_ = local_port;
-
-//     if (!Init()) {
-//         return false;
-//     }
-
-//     int broadcast = 1;
-//     int result = setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
-//     if (result != 0) {
-//         return false;
-//     }
-    
-//     struct sockaddr_in localAddr;
-//     memset(&localAddr, '\0', sizeof(localAddr));
-
-//     // Filling server information
-//     localAddr.sin_family = AF_INET; // IPv4
-//     //    local_addr.sin_addr.s_addr = local_address != nullptr ? ::inet_addr( local_address ) : INADDR_ANY;
-//     localAddr.sin_addr.s_addr = INADDR_ANY;
-//     localAddr.sin_port = htons(port_);
-
-//     // Bind the socket with the server address
-//     result = bind(m_socket, (const struct sockaddr *)&localAddr, sizeof(localAddr));
-//     if (result != 0) { // bind failed
-//         close(m_socket);
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// bool UdpSocket::Bind( uint16_t local_port )
-// {
-//     return Bind(nullptr, local_port);
-// }
 
 void UdpSocket::Abort()
 {
@@ -162,12 +118,3 @@ UdpSocket::~UdpSocket()
 {
     Abort();
 }
-// const char* UdpSocket::LocalAddress() const
-// {
-//     return address_;
-// }
-
-// uint16_t UdpSocket::LocalPort() const
-// {
-//     return port_;
-// }

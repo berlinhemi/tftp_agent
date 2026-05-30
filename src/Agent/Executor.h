@@ -6,7 +6,6 @@
 #include <vector>
 
 typedef unsigned char BYTE;
-// static const size_t MAX_DATA_SIZE = 10*1024*1024; // 10 MB
 
 enum class ExecStatus {
     Success = 0,
@@ -31,7 +30,6 @@ struct CommandResult {
     std::string std_out;
     std::string std_err;
     ExecStatus exitCode;
-    //bool timedOut; //TODO
 };
 
 class Executor

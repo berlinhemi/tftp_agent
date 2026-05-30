@@ -16,7 +16,6 @@ enum class OpCode {
 class DataPacket
 {
 public:
-    //const static uint16_t kMaxSize = 516;
     
     DataPacket() = default;
 
