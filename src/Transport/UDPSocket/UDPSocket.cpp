@@ -37,8 +37,6 @@ bool UdpSocket::Init()
         return false;
     }
    
-    //No need in bind(), because sendto() do it implicity
-
     return true;
 }
 
