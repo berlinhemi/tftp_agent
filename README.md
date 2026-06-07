@@ -24,12 +24,11 @@ openssl >= 3.0.0
 * `cd Debug && make`
 
 ### TODO: 
-- add class doc-strings
-- check for same commands !
+~ add doxygen doc-strings
+- check for same commands [?]
 ~ refactor according GStyle and CppGuide
 - add const to some methods
 - check arguments
-- add doxygen comments (?)
 - add UdpSocket statuses (?)
 - m_received_block_id processing ?
 - add coverage
