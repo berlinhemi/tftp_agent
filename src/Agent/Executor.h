@@ -7,6 +7,11 @@
 
 typedef unsigned char BYTE;
 
+/**
+ * @brief Shell command executor with timeout, stdout/stderr capture.
+ * Executes via /bin/sh -c with configurable timeout (default: 600s).
+ * Uses process groups to kill entire process tree on timeout.
+ */
 enum class ExecStatus {
     Success = 0,
     CommandNotFound = 127,
@@ -35,7 +40,17 @@ struct CommandResult {
 class Executor
 {
 public:
+    /**
+     * Execute shell command with timeout.
+     * @param command Shell command to execute
+     * @param timeoutSeconds Max execution time (default: 600)
+     * @return CommandResult with output and exit status
+     */
     static CommandResult Execute(const std::string& command,  int timeoutSeconds = 600); 
+    
+    /**
+     * Get human-readable description for status code.
+     */
     static std::string ErrorDescription(ExecStatus execStatus);
 };
 
