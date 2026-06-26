@@ -12,17 +12,36 @@
 #include <iomanip>
 #include <sstream>
 
-
-TFTPClient::TFTPClient(UdpSocket* sock, const std::string &server_addr, uint16_t port)
-    : m_socket(sock)
+// Production constructor
+TFTPClient::TFTPClient(const std::string& server_addr, uint16_t port)
+    : m_socket(new UdpSocket())
+    , m_ownsSocket(true)
     , m_remote_addr(server_addr)
     , m_initial_port(port)
     , m_remote_port(0)
     , m_received_block_id(0)
 {
-    if (!m_socket->IsInitialized())
+    if (!m_socket->IsInitialized()) 
     {
-        throw std::runtime_error("Invalid socket");
+        throw std::runtime_error("TFTPClient: failed to initialize UDP socket");
+    }
+}
+
+// Constructor for testing
+TFTPClient::TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port)
+    : m_socket(udp_sock)  
+    , m_ownsSocket(false)
+    , m_remote_addr(server_addr)
+    , m_initial_port(port)
+    , m_remote_port(0)
+    , m_received_block_id(0)
+{
+    if (!m_socket) {
+        throw std::runtime_error("TFTPClient: socket pointer is null");
+    }
+    
+    if (!m_socket->IsInitialized()) {
+        throw std::runtime_error("TFTPClient: socket is not initialized");
     }
 }
 
@@ -321,3 +340,10 @@ std::string TFTPClient::GetUploadedUniqueFName() {
     return oss.str();
 }
 
+TFTPClient::~TFTPClient()
+{
+    if (m_ownsSocket) {
+        delete m_socket;
+        m_socket = nullptr;
+    }
+}

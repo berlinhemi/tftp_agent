@@ -55,17 +55,27 @@ public:
         UNKNOWN      
     };
 
-     /**
-     * @brief Constructs a TFTP client.
+    /**
+     * @brief Main constructor with creation its own UdpSocket.
      * 
-     * @param udp_sock Pointer to initialized UDP socket (must remain valid for client lifetime)
-     * @param server_addr TFTP server IP address in dotted-decimal format (e.g., "192.168.1.100")
+     * @param server_addr TFTP server IP address in dotted-decimal format
      * @param port TFTP server port (typically 69 for TFTP)
      * 
-     * @throws std::runtime_error if socket is not initialized
+     * @throws std::runtime_error if socket initialization fails
+     */
+    TFTPClient(const std::string& server_addr, uint16_t port);
+    
+    /**
+     * @brief Constructor with dependency injection (for testing)
      * 
-     * @warning The caller is responsible for managing the socket lifetime.
-     *         Socket must outlive the TFTPClient instance.
+     * @param udp_sock Pointer to initialized UDP socket (must remain valid for client lifetime)
+     * @param server_addr TFTP server IP address in dotted-decimal format
+     * @param port TFTP server port (typically 69 for TFTP)
+     * 
+     * @throws std::runtime_error if socket is null or not initialized
+     * 
+     * @warning Caller is responsible for socket lifetime.
+     *          Socket must outlive the TFTPClient instance.
      */
     TFTPClient(UdpSocket* udp_sock, const std::string& server_addr, uint16_t port);
 
@@ -143,7 +153,7 @@ public:
     static uint16_t GetMaxDataSize();
     static std::string ErrorDescription(Status code);
 
-    ~TFTPClient() = default;
+    ~TFTPClient();
 
 private:
     
@@ -164,6 +174,8 @@ private:
     static inline std::string kBaseFilename = GenerateTimeSuffix();
 
     UdpSocket* m_socket;
+    // There is no ownership during testing
+    bool m_ownsSocket;
     std::string m_remote_addr;
     uint16_t m_initial_port;
     // Note: tftp server changes port durind data exchange
