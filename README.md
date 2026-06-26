@@ -24,6 +24,9 @@ openssl >= 3.0.0
 * `cd Debug && make`
 
 ### TODO: 
+- add mock for TFTPClient (may be with ITFTPClient.h ?)
+- add TFTPClient* member to Agent
+
 ~ add doxygen doc-strings
 - check for same commands [?]
 ~ refactor according GStyle and CppGuide
