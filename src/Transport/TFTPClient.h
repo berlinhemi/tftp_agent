@@ -1,6 +1,7 @@
 #ifndef TFTPCLIENT_H
 #define TFTPCLIENT_H
 
+#include "ITFTPClient.h"
 #include "UDPSocket/UDPSocket.h"
 #include "TFTPPacketTypes.h"
 
@@ -31,30 +32,11 @@ typedef unsigned char BYTE;
  * @see UdpSocket For underlying UDP transport
  * @see https://tools.ietf.org/html/rfc1350 TFTP Protocol Specification
  */
-class TFTPClient
+class TFTPClient : public ITFTPClient
 {
 public:
      
-    enum class Status {
-        kSuccess = 0,           ///< Operation completed successfully
-        kInvalidSocket,         ///< Socket is not properly initialized
-        kWriteError,            ///< Error writing to socket
-        kReadError,             ///< Error reading from socket
-        kUnexpectedPacketReceived, ///< Received packet with unexpected opcode
-        kEmptyFilename,         ///< Filename string is empty
-        kOpenFileError,         ///< Cannot open local file
-        kWriteFileError,        ///< Error writing to local file
-        kReadFileError,         ///< Error reading from local file
-        kSendRequestError       ///< Failed to send RRQ/WRQ request
-    };
-
-    enum class RequestType
-    {
-        GET = 0,     ///< Read request (RRQ)
-        PUT,         ///< Write request (WRQ)
-        UNKNOWN      
-    };
-
+   
     /**
      * @brief Main constructor with creation its own UdpSocket.
      * 
@@ -101,7 +83,7 @@ public:
      * @see Put() For file upload
      * @see GetMaxDataSize() Maximum data per packet
      */
-    Status Get(std::vector<BYTE>& buffer, const std::string& fname);
+    Status Get(std::vector<BYTE>& buffer, const std::string& fname) override;
 
      /**
      * @brief Uploads a file to TFTP server.
@@ -125,7 +107,7 @@ public:
      * @see Get() For file download
      * @see GetMaxDataSize() Maximum data per packet
      */
-    Status Put(const std::vector<BYTE>& data, const std::string& fname);
+    Status Put(const std::vector<BYTE>& data, const std::string& fname) override;
     
     /**
      * @brief Returns default filename for downloaded files.
