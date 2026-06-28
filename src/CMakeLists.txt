@@ -6,7 +6,7 @@ include_directories(.
 )
 
 add_executable (Agent
-                Agent/main.cpp
+                main.cpp
                 Agent/Agent.cpp
                 Agent/Executor.cpp
                 Agent/Packer.cpp

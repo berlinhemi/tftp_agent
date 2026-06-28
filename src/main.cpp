@@ -1,6 +1,6 @@
 
-#include "ArgParser.h"
-#include "Packer.h"
+#include "Agent/ArgParser.h"
+#include "Agent/Packer.h"
 #include "Transport/TFTPClient.h"
 
 #include <algorithm>
