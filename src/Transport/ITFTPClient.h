@@ -14,6 +14,9 @@ typedef unsigned char BYTE;
 class ITFTPClient
 {
 public:
+    virtual ~ITFTPClient() = default;
+
+
     enum class Status {
         kSuccess = 0,           ///< Operation completed successfully
         kInvalidSocket,         ///< Socket is not properly initialized
@@ -34,6 +37,7 @@ public:
     };
     virtual Status Get(std::vector<BYTE>& buffer, const std::string& fname) = 0;
     virtual Status Put(const std::vector<BYTE>& data, const std::string& fname) = 0;
+   
 };
 
 #endif // ITFTPCLIENT_H
