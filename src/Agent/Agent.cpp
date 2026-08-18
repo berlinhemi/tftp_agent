@@ -18,7 +18,7 @@ Agent::Agent(std::string host, std::string encryptionKey, uint16_t port)
 }
 
 Agent::Agent(ITFTPClient* client, std::string encryptionKey)
-    : m_tftpClient(client)
+    : m_tftpClient(client, [](ITFTPClient*) {}) // empty deleter for tests
     , m_host("")
     , m_port(0)
     , m_encryptionKey(std::move(encryptionKey))

@@ -8,7 +8,9 @@
 #include <netinet/in.h>
 
 #include <array>
+#include <memory>
 #include <string>
+
 
 
 typedef unsigned char BYTE;
@@ -135,7 +137,7 @@ public:
     static uint16_t GetMaxDataSize();
     static std::string ErrorDescription(Status code);
 
-    ~TFTPClient();
+    ~TFTPClient() = default;
 
 private:
     
@@ -155,12 +157,11 @@ private:
     static inline int kCallCounter = 0;
     static inline std::string kBaseFilename = GenerateTimeSuffix();
 
-    UdpSocket* m_socket;
-    // There is no ownership during testing
-    bool m_ownsSocket;
+    // shared_ptr is used to make writing tests easier
+    std::shared_ptr<UdpSocket> m_socket;
     std::string m_remote_addr;
     uint16_t m_initial_port;
-    // Note: tftp server changes port durind data exchange
+    // Note: tftp server changes the port durind data exchange
     uint16_t m_remote_port; 
     uint16_t m_received_block_id;
 };

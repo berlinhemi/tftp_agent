@@ -1,9 +1,11 @@
 #ifndef AGENT_H
 #define AGENT_H
 
+#include "../Transport/ITFTPClient.h"
 #include "Executor.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -75,7 +77,7 @@ private:
     std::string GetCommand();
     bool SendResult(CommandResult result);
 
-    std::unique_ptr<ITFTPClient> m_tftpClient;
+    std::shared_ptr<ITFTPClient> m_tftpClient;
     std::string m_host;         ///< TFTP server IP address
     uint16_t m_port;            ///< TFTP server port (default: 69)
     std::string m_encryptionKey;///< RC4 encryption key for packing/unpacking

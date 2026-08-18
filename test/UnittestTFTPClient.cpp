@@ -51,7 +51,14 @@ protected:
         el::Loggers::reconfigureLogger("default", el::ConfigurationType::Format, "[%level] %msg");
         el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
 
-        m_tftp_client = std::make_unique<TFTPClient>(&m_mock_socket, m_server_addr, m_port);
+       // m_mock_socket = std::make_unique<MockUdpSocket>();
+        
+        m_tftp_client = std::make_unique<TFTPClient>(
+            &m_mock_socket, 
+            m_server_addr, 
+            m_port
+        );
+
         m_header_size = TFTPClient::GetHeaderSize();
         m_max_data_size = TFTPClient::GetMaxDataSize();
     }
