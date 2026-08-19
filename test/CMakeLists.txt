@@ -27,6 +27,10 @@ add_executable(AgentPackerTest
         UnittestPacker.cpp
         Base64.cpp
         )
+
+add_executable(AgentTest
+        UnittestAgent.cpp
+        )
 #message(TEST_SRC_FILES="${TEST_SRC_FILES}")
 #target_link_libraries(TFTPCliTest udp_socket tftp_client gtest gmock easylogging)
 target_link_libraries(TFTPCliTest 
@@ -47,6 +51,18 @@ target_link_libraries(AgentPackerTest
                         OpenSSL::Crypto
                       gtest
                       gmock)
+
+target_link_libraries(AgentTest
+                      agent
+                      packer
+                      executor
+                      tftp_client
+                      udp_socket
+                      ZLIB::ZLIB
+                        OpenSSL::SSL 
+                        OpenSSL::Crypto
+                      gtest
+                      gmock)
         #easyloggingpp::easyloggingpp)
 # target_link_libraries(tftp_cli_test gtest gmock udp_socket tftp_client ?gtest_main?)
 
@@ -62,5 +78,10 @@ add_test(NAME AgentExecutorTest
 
 add_test(NAME AgentPackerTest
         COMMAND AgentPackerTest
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+
+add_test(NAME AgentTest
+        COMMAND AgentTest
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
