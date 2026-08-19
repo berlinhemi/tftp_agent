@@ -42,20 +42,18 @@ public:
      * 
      * @note Key must be non-empty for encryption/decryption to work
      */
-    Agent(std::string host,  std::string encryptionKey, uint16_t port = 69);
+    Agent(std::string host, std::string encryptionKey, uint16_t port = 69);
 
      /**
      * @brief Constructs Agent with injected TFTP client (for testing).
      * 
      * Allows dependency injection of a mock/stub ITFTPClient for unit testing.
-     * Agent takes ownership of the client pointer.
      * 
      * @param client Pointer to ITFTPClient implementation (must be non-null)
      * @param encryptionKey RC4 encryption key for packing/unpacking
      * 
      * @throws std::invalid_argument if client is nullptr
      * 
-     * @note Agent owns the client and will delete it in destructor
      * @note This constructor doesn't need host/port as they're in the client
      */
     Agent(ITFTPClient* client, std::string encryptionKey);
