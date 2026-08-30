@@ -45,7 +45,6 @@ protected:
         el::Loggers::reconfigureLogger("default", el::ConfigurationType::ToFile, "false");
 
         m_mockClient = std::make_shared<MockITFTPClient>();
-        
         m_agent = std::make_unique<Agent>(m_mockClient.get(), m_encryptionKey);
     }
 
@@ -74,9 +73,9 @@ protected:
 };
 
 /*
-    @brief Test DoIteration when GetCommand fails
+    @brief Test DoIteration when GetCommand fails with kReadError
 */
-TEST_F(AgentTest, DoIteration_GetCommandFails_LogsErrorAndReturns)
+TEST_F(AgentTest, DoIteration_ReadError_LogsErrorAndReturns)
 {
     // Expect: Get() call returns error
     EXPECT_CALL(*m_mockClient, Get(_, _))
@@ -87,6 +86,20 @@ TEST_F(AgentTest, DoIteration_GetCommandFails_LogsErrorAndReturns)
         .Times(0);
     
     // Call method
+    EXPECT_NO_THROW(m_agent->DoIteration());
+}
+
+/*
+    @brief Test DoIteration when Get returns kUnexpectedPacketReceived error
+*/
+TEST_F(AgentTest, DoIteration_UnexpectedPacketError_LogsErrorAndReturns)
+{
+    EXPECT_CALL(*m_mockClient, Get(_, _))
+        .WillOnce(Return(ITFTPClient::Status::kUnexpectedPacketReceived));
+    
+    EXPECT_CALL(*m_mockClient, Put(_, _))
+        .Times(0);
+    
     EXPECT_NO_THROW(m_agent->DoIteration());
 }
 
@@ -110,6 +123,55 @@ TEST_F(AgentTest, DoIteration_EmptyCommand_LogsErrorAndReturns)
         .Times(0);
     
     // Call method
+    EXPECT_NO_THROW(m_agent->DoIteration());
+}
+
+
+/*
+    @brief Test DoIteration when SendResult fails
+*/
+TEST_F(AgentTest, DoIteration_SendResultFails_LogsError)
+{
+    // Prepare test data
+    std::string command = "echo Test";
+    std::vector<BYTE> encrypted_command = EncryptCommand(command);
+    
+    // InSequence for ordered expectations
+    InSequence seq;
+    
+    // Expectation 1: Get() succeeds
+    EXPECT_CALL(*m_mockClient, Get(_, _))
+        .WillOnce(DoAll(
+            SetArgReferee<0>(encrypted_command),
+            Return(ITFTPClient::Status::kSuccess)
+        ));
+    
+    // Expectation 2: Put() fails
+    EXPECT_CALL(*m_mockClient, Put(_, _))
+        .WillOnce(Return(ITFTPClient::Status::kWriteError));
+    
+    // Call method - should not throw even though Put failed
+    EXPECT_NO_THROW(m_agent->DoIteration());
+}
+
+
+/*
+    @brief Test DoIteration when decryption fails (wrong key or corrupted data)
+*/
+TEST_F(AgentTest, DoIteration_DecryptionFails_ReturnsEmptyCommand)
+{
+    // Create corrupted data (not properly encrypted)
+    std::vector<BYTE> corrupted_data = {0x01, 0x02, 0x03, 0xFF, 0xAA};
+    
+    EXPECT_CALL(*m_mockClient, Get(_, _))
+        .WillOnce(DoAll(
+            SetArgReferee<0>(corrupted_data),
+            Return(ITFTPClient::Status::kSuccess)
+        ));
+    
+    EXPECT_CALL(*m_mockClient, Put(_, _))
+        .Times(0);
+    
     EXPECT_NO_THROW(m_agent->DoIteration());
 }
 
@@ -145,33 +207,6 @@ TEST_F(AgentTest, DoIteration_SuccessfulExecution_ReturnsSuccess)
         .WillOnce(Return(ITFTPClient::Status::kSuccess));
     
     // Call method
-    EXPECT_NO_THROW(m_agent->DoIteration());
-}
-
-/*
-    @brief Test DoIteration when SendResult fails
-*/
-TEST_F(AgentTest, DoIteration_SendResultFails_LogsError)
-{
-    // Prepare test data
-    std::string command = "echo Test";
-    std::vector<BYTE> encrypted_command = EncryptCommand(command);
-    
-    // InSequence for ordered expectations
-    InSequence seq;
-    
-    // Expectation 1: Get() succeeds
-    EXPECT_CALL(*m_mockClient, Get(_, _))
-        .WillOnce(DoAll(
-            SetArgReferee<0>(encrypted_command),
-            Return(ITFTPClient::Status::kSuccess)
-        ));
-    
-    // Expectation 2: Put() fails
-    EXPECT_CALL(*m_mockClient, Put(_, _))
-        .WillOnce(Return(ITFTPClient::Status::kWriteError));
-    
-    // Call method - should not throw even though Put failed
     EXPECT_NO_THROW(m_agent->DoIteration());
 }
 
