@@ -20,12 +20,11 @@ openssl >= 3.0.0
 *  Make sure that your conan profile contains Debug build type
 * `mkdir build && cd build`
 * `conan install ..  --build=missing`
-* `cmake --preset conan-debug  ..`
+* `cmake --preset conan-debug  .. -DENABLE_COVERAGE=ON`
 * `cd Debug && make`
+* `make coverage`
 
 ### TODO: 
-- add mock for TFTPClient (may be with ITFTPClient.h ?)
-- add TFTPClient* member to Agent
  
 ~ add doxygen doc-strings
 - check for same commands [?]
@@ -34,7 +33,6 @@ openssl >= 3.0.0
 - check arguments
 - add UdpSocket statuses (?)
 - m_received_block_id processing ?
-- add coverage
 - run clang-tidy
 - add json-config
 
