@@ -126,7 +126,6 @@ TEST_F(AgentTest, DoIteration_EmptyCommand_LogsErrorAndReturns)
     EXPECT_NO_THROW(m_agent->DoIteration());
 }
 
-
 /*
     @brief Test DoIteration when SendResult fails
 */
@@ -153,7 +152,6 @@ TEST_F(AgentTest, DoIteration_SendResultFails_LogsError)
     // Call method - should not throw even though Put failed
     EXPECT_NO_THROW(m_agent->DoIteration());
 }
-
 
 /*
     @brief Test DoIteration when decryption fails (wrong key or corrupted data)
@@ -209,7 +207,6 @@ TEST_F(AgentTest, DoIteration_SuccessfulExecution_ReturnsSuccess)
     // Call method
     EXPECT_NO_THROW(m_agent->DoIteration());
 }
-
 
 int main(int argc, char** argv)
 {   
