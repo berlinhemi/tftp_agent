@@ -32,9 +32,10 @@ protected:
     std::string m_host = "1.1.1.1";
     uint16_t m_port = 69;
 
+    el::Configurations defaul_conf;
+
     void SetUp() override
     {
-        el::Configurations defaul_conf;
         defaul_conf.setToDefault();
         defaul_conf.set(el::Level::Info, el::ConfigurationType::Enabled, "true");
         defaul_conf.set(el::Level::Debug, el::ConfigurationType::Enabled, "false");
@@ -186,6 +187,7 @@ TEST_F(AgentTest, DoIteration_SuccessfulExecution_ReturnsSuccess)
     
     // Prepare expected result
     CommandResult expected_result;
+    
     expected_result.exitCode = ExecStatus::Success;
     expected_result.std_out = "Hello World\n";
     expected_result.std_err = "";
@@ -204,6 +206,10 @@ TEST_F(AgentTest, DoIteration_SuccessfulExecution_ReturnsSuccess)
     EXPECT_CALL(*m_mockClient, Put(_, _))
         .WillOnce(Return(ITFTPClient::Status::kSuccess));
     
+    
+    // enable verbosity to test output in DoIteration()
+    defaul_conf.set(el::Level::Verbose, el::ConfigurationType::Enabled, "true");
+    el::Loggers::setVerboseLevel(1);
     // Call method
     EXPECT_NO_THROW(m_agent->DoIteration());
 }
