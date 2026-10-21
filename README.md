@@ -15,17 +15,33 @@
 
 ## Dependencies
 openssl >= 3.0.0
+zlib >= 1.3.2
 
-## Build
+### System packages for coverage
+```bash
+apt install -y build-essential lcov genhtml \
+    libtimedate-perl libcapture-tiny-perl libdatetime-perl libjson-xs-perl
+```
+
+### if your lcov older than 2.0
+```bash
+cd /tmp
+wget https://github.com/linux-test-project/lcov/releases/download/v2.3.1/lcov-2.3.1.tar.gz
+tar xfz lcov-2.3.1.tar.gz
+cd lcov-2.3.1
+sudo make install
+```
+
+## 🔨 Build
 *  Make sure that your conan profile contains Debug build type
 * `mkdir build && cd build`
 * `conan install ..  --build=missing`
 * `cmake --preset conan-debug  .. -DENABLE_COVERAGE=ON`
 * `cd Debug && make`
-## Coverage report
-* `make coverage`
+## 📊 Coverage report
+* `cd Debug && make coverage`
 
-### TODO: 
+### 📝 TODO: 
  
 ~ add doxygen doc-strings
 - check for same commands [?]
