@@ -90,19 +90,38 @@ add_test(NAME AgentTest
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
-# ============ ЦЕЛЬ ДЛЯ ГЕНЕРАЦИИ COVERAGE ОТЧЕТА ============
+# ============ COVERAGE REPORT ============
 if(ENABLE_COVERAGE)
-    find_program(LCOV_EXECUTABLE lcov)
-    find_program(GENHTML_EXECUTABLE genhtml)
+    # Явно указываем новые версии из /usr/local/bin
+    if(EXISTS "/usr/local/bin/lcov")
+        set(LCOV_EXECUTABLE "/usr/local/bin/lcov")
+    else()
+        find_program(LCOV_EXECUTABLE lcov)
+    endif()
     
-    if(LCOV_EXECUTABLE AND GENHTML_EXECUTABLE)
+    if(EXISTS "/usr/local/bin/genhtml")
+        set(GENHTML_EXECUTABLE "/usr/local/bin/genhtml")
+    else()
+        find_program(GENHTML_EXECUTABLE genhtml)
+    endif()
+    
+    if(EXISTS "/usr/local/bin/gcov")
+        set(GCOV_EXECUTABLE "/usr/local/bin/gcov")
+    else()
+        find_program(GCOV_EXECUTABLE gcov)
+    endif()
+    
+    if(LCOV_EXECUTABLE AND GENHTML_EXECUTABLE AND GCOV_EXECUTABLE)
+        message(STATUS "Using lcov: ${LCOV_EXECUTABLE}")
+        message(STATUS "Using genhtml: ${GENHTML_EXECUTABLE}")
+        message(STATUS "Using gcov: ${GCOV_EXECUTABLE}")
+        
         add_custom_target(coverage
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
             COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/coverage_report
-            # Сканируем ВСЮ папку сборки, а не только текущую
             COMMAND ${LCOV_EXECUTABLE} --capture --directory ${CMAKE_BINARY_DIR} 
                     --output-file ${CMAKE_BINARY_DIR}/coverage.info
-                    --gcov-tool /usr/bin/gcov-14
+                    --gcov-tool ${GCOV_EXECUTABLE}
                     --ignore-errors inconsistent,version
             COMMAND ${LCOV_EXECUTABLE} --remove ${CMAKE_BINARY_DIR}/coverage.info 
                     "/usr/*" 
@@ -111,7 +130,7 @@ if(ENABLE_COVERAGE)
                     "${CMAKE_BINARY_DIR}/CMakeFiles/*"
                     "${CMAKE_BINARY_DIR}/generators/*"
                     --output-file ${CMAKE_BINARY_DIR}/coverage_filtered.info
-                    --gcov-tool /usr/bin/gcov-14
+                    --gcov-tool ${GCOV_EXECUTABLE}
                     --ignore-errors unused
             COMMAND ${GENHTML_EXECUTABLE} ${CMAKE_BINARY_DIR}/coverage_filtered.info 
                     --output-directory ${CMAKE_BINARY_DIR}/coverage_report
@@ -131,7 +150,7 @@ if(ENABLE_COVERAGE)
         
         message(STATUS "Coverage target added: 'make coverage' or 'make cov'")
     else()
-        message(WARNING "lcov or genhtml not found - install: sudo apt-get install lcov")
+        message(FATAL_ERROR "lcov, genhtml or gcov not found")
     endif()
 endif()
 # ================================================================
