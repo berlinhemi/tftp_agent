@@ -13,7 +13,7 @@
 - execute commands
 - send results to tftp server
 
-## Dependencies
+## 📦 Dependencies
 openssl >= 3.0.0
 zlib >= 1.3.2
 
@@ -23,7 +23,7 @@ apt install -y build-essential lcov genhtml \
     libtimedate-perl libcapture-tiny-perl libdatetime-perl libjson-xs-perl
 ```
 
-### if your lcov older than 2.0
+#### If your lcov version < 2.0
 ```bash
 cd /tmp
 wget https://github.com/linux-test-project/lcov/releases/download/v2.3.1/lcov-2.3.1.tar.gz
@@ -33,13 +33,18 @@ sudo make install
 ```
 
 ## 🔨 Build
-*  Make sure that your conan profile contains Debug build type
-* `mkdir build && cd build`
-* `conan install ..  --build=missing`
-* `cmake --preset conan-debug  .. -DENABLE_COVERAGE=ON`
-* `cd Debug && make`
+### Make sure that your conan profile contains Debug build type
+```bash
+mkdir build && cd build
+conan install ..  --build=missing
+cmake --preset conan-debug  .. -DENABLE_COVERAGE=ON
+cd Debug && make
+```
+
 ## 📊 Coverage report
-* `cd Debug && make coverage`
+```bash
+cd Debug && make coverage
+```
 
 ### 📝 TODO: 
  
@@ -53,8 +58,3 @@ sudo make install
 - run clang-tidy
 - add json-config
 
-
--  **...**: ...
--  **...**: ...
-
-##  Build
