@@ -14,7 +14,19 @@ add_executable (Agent
                 Transport/TFTPClient.cpp
 )
 
+add_executable (PackerUtil
+                Tools/packer_main.cpp      
+                Agent/Packer.cpp
+
+)
+
 target_link_libraries(Agent PRIVATE 
+                    ZLIB::ZLIB
+                    OpenSSL::SSL 
+                    OpenSSL::Crypto
+                    ) 
+
+target_link_libraries(PackerUtil PRIVATE 
                     ZLIB::ZLIB
                     OpenSSL::SSL 
                     OpenSSL::Crypto
