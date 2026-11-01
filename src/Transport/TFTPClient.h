@@ -149,6 +149,7 @@ private:
     Status PutData(const std::vector<BYTE>& data);
     Status Read(std::vector<BYTE>& buffer);
     static std::string GenerateTimeSuffix();
+    static std::string GetCurrentDateTime();
 
     static inline const std::string kDownloadedDefaultFname = "input";
     static inline const std::string kUploadedDefaultFname = "output";

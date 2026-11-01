@@ -332,9 +332,13 @@ std::string TFTPClient::GenerateTimeSuffix() {
     return oss.str();
 }
 
+std::string TFTPClient::GetCurrentDateTime() {
+    return std::format("{:%Y-%m-%d_%H-%M}", std::chrono::system_clock::now());
+}
+
 std::string TFTPClient::GetUploadedUniqueFName() {
     std::ostringstream oss;
-    oss << kBaseFilename << "_" << (++kCallCounter);
+    oss << kBaseFilename << "_" << GetCurrentDateTime() << "_" << (++kCallCounter);
     return oss.str();
 }
 
