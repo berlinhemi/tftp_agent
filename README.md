@@ -5,7 +5,7 @@
 
 > **tftp-agent** is based on [sai-sv/tftp](https://github.com/sai-sv/tftp) (tftp get and put requests via dgram socket).
 
-## ✨ Brief
+## ℹ️ Brief
   This tool implements client functionality in a client-server application. 
   Any TFTP server can act as server side of the application.
 ## ✨ Key features
@@ -33,7 +33,7 @@ sudo make install
 ```
 
 ## 🔨 Build
-### Make sure that your conan profile contains Debug build type
+*Make sure that your conan profile contains Debug build type*
 ```bash
 mkdir build && cd build
 conan install ..  --build=missing
@@ -47,9 +47,11 @@ cd Debug && make coverage
 ```
 
 ### 📝 TODO: 
- 
+ - add Inctance id for output name
+ - add packer-Util
+ - check for same commands [?]
 ~ add doxygen doc-strings
-- check for same commands [?]
+
 ~ refactor according GStyle and CppGuide
 - add const to some methods
 - check arguments
