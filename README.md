@@ -37,6 +37,8 @@ sudo make install
 ```bash
 mkdir build && cd build
 conan install ..  --build=missing
+cmake --preset conan-debug  .. 
+OR
 cmake --preset conan-debug  .. -DENABLE_COVERAGE=ON
 cd Debug && make
 ```
