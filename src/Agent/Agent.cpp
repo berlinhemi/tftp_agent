@@ -17,6 +17,7 @@ Agent::Agent(std::string host, std::string encryptionKey, uint16_t port)
     }
 }
 
+
 Agent::Agent(ITFTPClient* client, std::string encryptionKey)
     : m_tftpClient(client, [](ITFTPClient*) {}) // empty deleter for tests
     , m_host("")
@@ -30,6 +31,7 @@ Agent::Agent(ITFTPClient* client, std::string encryptionKey)
         LOG(WARNING) << "Encryption key is empty - packing/unpacking may not work correctly";
     }
 }
+
 
 std::string Agent::GetCommand()
 {
@@ -49,8 +51,6 @@ std::string Agent::GetCommand()
     }
     return oss.str();
 }
-
-
 
 
 bool Agent::SendResult(CommandResult result)

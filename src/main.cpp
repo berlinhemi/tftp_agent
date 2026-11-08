@@ -1,4 +1,5 @@
 
+#include "Agent/Agent.h"
 #include "Agent/ArgParser.h"
 #include "Agent/Packer.h"
 #include "Transport/TFTPClient.h"
@@ -17,13 +18,13 @@ INITIALIZE_EASYLOGGINGPP
 static void ShowHelp(const std::string program_name)
 {
     std::cout << format("\nTFTP Agent\n"
-        "Usage:   {0} -h SERVER -o OPERATION [-f FNAME] \n"  
+        "Usage:   {0} -h SERVER -a ACTION [-f FNAME] \n"  
         "\t-s: hostname\n"
-        "\t-o: operation\n"
+        "\t-a: action\n"
         "\t-f: filename (optional). Default filename for GET is 'input', for PUT is 'output'\n"
         "Examples:\n"
-        "\t{0} -s 192.168.1.104 -o get \n"
-        "\t{0} -s server.com -o put -f result\n"
+        "\t{0} -s 192.168.1.104 -a get \n"
+        "\t{0} -s server.com -a put -f result\n"
         , program_name);
     
 }
@@ -53,24 +54,24 @@ int main(int argc, char **argv)
         LOG(ERROR) << "Option -s not found";
         return -1;
     }
-    if(!arg_parser.cmdOptionExists("-o")){
-        LOG(ERROR) << "Option -o not found";
+    if(!arg_parser.cmdOptionExists("-a")){
+        LOG(ERROR) << "Option -a not found";
         return -1;
     }
 
     const uint16_t port = 69;
     std::string host = arg_parser.getCmdOption("-s");
-    std::string operation = arg_parser.getCmdOption("-o");
+    std::string action = arg_parser.getCmdOption("-a");
     TFTPClient::RequestType request_type;
 
-    if(operation == "get"){
+    if(action == "get"){
         request_type = TFTPClient::RequestType::GET;
     }
-    else if (operation == "put"){
+    else if (action == "put"){
         request_type = TFTPClient::RequestType::PUT;
     }
     else{
-        LOG(ERROR) << "Unknow operation";
+        LOG(ERROR) << "Unknow action";
         return -1;
     }
 
@@ -82,48 +83,15 @@ int main(int argc, char **argv)
     else
     {
         LOG(INFO) << "Using default file name";
-        fname = (operation == "get") ?
+        fname = (action == "get") ?
          TFTPClient::GetDownloadedDefaultFName() 
          : TFTPClient::GetUploadedUniqueFName();
     }
     
-
     LOG(INFO) << std::format("Start TFTP Client {}:{}", host.c_str(), port);
 
-   
-    UdpSocket sock;
-    TFTPClient client(&sock, host, port);
+    Agent agent(host, "secret");
+    agent.DoIteration();
     
-    TFTPClient::Status status;
-    Packer packer("s3cr3t_k3y");
-    if (request_type == TFTPClient::RequestType::GET)
-    {
-        std::vector<BYTE> command;
-        status = client.Get(command, fname); 
-        std::vector<BYTE> unpacked = packer.Unpack(command);
-        std::ostringstream oss;
-        LOG(INFO) << "Command size:" << unpacked.size();
-        oss << "GetCommand result: ";
-        for (auto e : unpacked){
-            oss << e;
-        }
-        LOG(INFO) << oss.str();
-    }
-    else if (request_type == TFTPClient::RequestType::PUT)
-    {
-        // Some test data
-        std::string command = "cat /etc/passwd | grep root";
-        std::vector<BYTE> data(command.begin(), command.end());
-        std::vector<BYTE> packed_data = packer.Pack(data);
-        status = client.Put(packed_data, fname);
-    }
-  
-
-    if (status != TFTPClient::Status::kSuccess) {
-        LOG(ERROR) << client.ErrorDescription(status).c_str();
-        return 1;
-    }
-  
-  
     return 0;
 }
