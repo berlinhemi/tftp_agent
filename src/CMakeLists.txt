@@ -20,6 +20,12 @@ add_executable (PackerUtil
 
 )
 
+add_executable(UnpackerUtil
+    Tools/unpack_main.cpp
+    Agent/Packer.cpp
+)
+
+
 target_link_libraries(Agent PRIVATE 
                     ZLIB::ZLIB
                     OpenSSL::SSL 
@@ -31,6 +37,12 @@ target_link_libraries(PackerUtil PRIVATE
                     OpenSSL::SSL 
                     OpenSSL::Crypto
                     ) 
+
+target_link_libraries(UnpackerUtil PRIVATE
+                    ZLIB::ZLIB
+                    OpenSSL::SSL
+                    OpenSSL::Crypto
+)
 
 
 add_library(udp_socket Transport/UDPSocket/UDPSocket.cpp)
